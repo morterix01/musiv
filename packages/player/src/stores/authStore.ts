@@ -42,11 +42,16 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   isLoaded: false,
 
   loadFromDisk: async () => {
-    const spotify =
-      (await store.get<ServiceAuth>('spotify')) ?? DEFAULT_AUTH;
-    const youtube =
-      (await store.get<ServiceAuth>('youtube')) ?? DEFAULT_AUTH;
-    set({ spotify, youtube, isLoaded: true });
+    try {
+      const spotify =
+        (await store.get<ServiceAuth>('spotify')) ?? DEFAULT_AUTH;
+      const youtube =
+        (await store.get<ServiceAuth>('youtube')) ?? DEFAULT_AUTH;
+      set({ spotify, youtube, isLoaded: true });
+    } catch (error) {
+      console.warn('Failed to load auth store, using defaults', error);
+      set({ spotify: DEFAULT_AUTH, youtube: DEFAULT_AUTH, isLoaded: true });
+    }
   },
 
   setClientId: async (service, clientId) => {
