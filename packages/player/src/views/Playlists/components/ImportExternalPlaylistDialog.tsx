@@ -1,4 +1,4 @@
-import { SiSpotify, SiYoutube } from '@icons-pack/react-simple-icons';
+import { Music, Video } from 'lucide-react';
 import { type FC, useState } from 'react';
 
 import { useTranslation } from '@nuclearplayer/i18n';
@@ -95,7 +95,7 @@ export const ImportExternalPlaylistDialog: FC<Props> = ({ isOpen, onClose }) => 
         {/* Provider selector */}
         <div className="flex gap-2">
           <Button
-            variant={activeProvider === 'spotify' ? 'default' : 'outline'}
+            variant={activeProvider === 'spotify' ? 'default' : 'secondary'}
             className="flex flex-1 items-center gap-2"
             onClick={() => {
               if (!hasSpotifyClientId) {
@@ -109,12 +109,12 @@ export const ImportExternalPlaylistDialog: FC<Props> = ({ isOpen, onClose }) => 
               }
             }}
           >
-            <SiSpotify size={16} color="#1DB954" />
+            <Music size={16} color="#1DB954" />
             Spotify
             {!hasSpotifyToken && <span className="ml-auto text-xs opacity-60">Login required</span>}
           </Button>
           <Button
-            variant={activeProvider === 'youtube' ? 'default' : 'outline'}
+            variant={activeProvider === 'youtube' ? 'default' : 'secondary'}
             className="flex flex-1 items-center gap-2"
             onClick={() => {
               if (!hasYoutubeClientId) {
@@ -128,7 +128,7 @@ export const ImportExternalPlaylistDialog: FC<Props> = ({ isOpen, onClose }) => 
               }
             }}
           >
-            <SiYoutube size={16} color="#FF0000" />
+            <Video size={16} color="#FF0000" />
             YouTube
             {!hasYoutubeToken && <span className="ml-auto text-xs opacity-60">Login required</span>}
           </Button>
@@ -152,8 +152,10 @@ export const ImportExternalPlaylistDialog: FC<Props> = ({ isOpen, onClose }) => 
         {!loading && playlists.length > 0 && (
           <div className="flex flex-1 flex-col gap-2 overflow-y-auto">
             {playlists.map((item) => {
-              const id = item.data.id;
-              const name = item.data.provider === 'spotify'
+              const id = item.provider === 'spotify' 
+                ? (item.data as SpotifyPlaylistSummary).id 
+                : (item.data as YtPlaylistSummary).id;
+              const name = item.provider === 'spotify'
                 ? (item.data as SpotifyPlaylistSummary).name
                 : (item.data as YtPlaylistSummary).snippet.title;
               const count = item.provider === 'spotify'

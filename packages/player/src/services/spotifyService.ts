@@ -230,7 +230,7 @@ const spotifyTrackToNuclear = (t: SpotifyTrack): Track => ({
         title: t.album.name,
         artists: t.album.artists?.map((a) => ({
           name: a.name,
-          roles: ['artist'],
+          source: { provider: 'spotify', id: a.id },
         })),
         artwork: t.album.images?.[0]
           ? { items: [{ url: t.album.images[0].url }] }

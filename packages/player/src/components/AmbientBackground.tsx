@@ -3,7 +3,7 @@ import { FC } from 'react';
 
 export const AmbientBackground: FC = () => {
   const currentItem = useQueueStore((state) => state.getCurrentItem());
-  const thumbnail = currentItem?.track?.thumbnail;
+  const thumbnail = currentItem?.track?.artwork?.items?.[0]?.url;
 
   return (
     <div className="pointer-events-none fixed inset-0 -z-10 bg-background transition-colors duration-1000">

@@ -1,4 +1,4 @@
-import { SiSpotify, SiYoutube } from '@icons-pack/react-simple-icons';
+import { Music, Video } from 'lucide-react';
 import { type FC } from 'react';
 
 import { useTranslation } from '@nuclearplayer/i18n';
@@ -21,7 +21,7 @@ export const ConnectedAccountsSection: FC = () => {
         {/* Spotify */}
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2">
-            <SiSpotify size={20} color="#1DB954" />
+            <Music size={20} color="#1DB954" />
             <h3 className="font-bold">Spotify</h3>
           </div>
           <p className="text-foreground-secondary text-sm">
@@ -30,13 +30,12 @@ export const ConnectedAccountsSection: FC = () => {
           <div className="flex items-center gap-2">
             <Input 
               className="flex-1"
-              type="text" 
               placeholder="Spotify Client ID" 
               value={spotify.clientId}
               onChange={(e) => authStore.setClientId('spotify', e.target.value)}
             />
             <Button 
-              variant="outline"
+              variant="secondary"
               disabled={!spotify.clientId}
               onClick={() => {
                 if (spotify.accessToken) {
@@ -55,7 +54,7 @@ export const ConnectedAccountsSection: FC = () => {
         {/* YouTube */}
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2">
-            <SiYoutube size={20} color="#FF0000" />
+            <Video size={20} color="#FF0000" />
             <h3 className="font-bold">YouTube</h3>
           </div>
           <p className="text-foreground-secondary text-sm">
@@ -64,13 +63,12 @@ export const ConnectedAccountsSection: FC = () => {
           <div className="flex items-center gap-2">
             <Input 
               className="flex-1"
-              type="text" 
               placeholder="YouTube Client ID" 
               value={youtube.clientId}
               onChange={(e) => authStore.setClientId('youtube', e.target.value)}
             />
             <Button 
-              variant="outline"
+              variant="secondary"
               disabled={!youtube.clientId}
               onClick={() => {
                 if (youtube.accessToken) {
