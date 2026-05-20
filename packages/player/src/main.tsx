@@ -8,6 +8,7 @@ import { initializePlaylistStore } from './stores/playlistStore';
 import { initializeQueueStore } from './stores/queueStore';
 import { initializeSettingsStore } from './stores/settingsStore';
 import { initializeShortcutsStore } from './stores/shortcutsStore';
+import { initializeAuthStore } from './stores/authStore';
 
 import '@nuclearplayer/tailwind-config';
 import '@nuclearplayer/themes';
@@ -35,6 +36,7 @@ initLogStream();
 
 initializeSettingsStore()
   .then(() => initializeShortcutsStore())
+  .then(() => initializeAuthStore())
   .then(() => initializeQueueStore())
   .then(() => initializeFavoritesStore())
   .then(() => initializePlaylistStore())

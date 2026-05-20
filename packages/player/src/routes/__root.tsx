@@ -19,6 +19,7 @@ import {
   Toaster,
 } from '@nuclearplayer/ui';
 
+import { AmbientBackground } from '../components/AmbientBackground';
 import { ConnectedPlayerBar } from '../components/ConnectedPlayerBar';
 import {
   ConnectedQueuePanel,
@@ -51,6 +52,7 @@ const RootComponent = () => {
 
   return (
     <PlayerShell>
+      <AmbientBackground />
       <GlobalShortcuts />
       <div>
         <FlatpakWarningBanner />
