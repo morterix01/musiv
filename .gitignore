@@ -1,4 +1,7 @@
 node_modules
+.corepack
+.helm-diag
+.pnpm-store
 dist
 build
 *.d.ts.map

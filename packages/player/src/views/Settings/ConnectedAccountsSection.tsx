@@ -11,30 +11,30 @@ import { useAuthStore } from '../../stores/authStore';
 export const ConnectedAccountsSection: FC = () => {
   const { t } = useTranslation('preferences');
   const authStore = useAuthStore();
-  
+
   const { spotify, youtube } = authStore;
 
   return (
-    <SectionShell title={t('connectedAccounts.title', 'Connected Accounts')}>
+    <SectionShell title={t('connectedAccounts.title')}>
       <div className="flex flex-col gap-6">
-        
-        {/* Spotify */}
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2">
             <Music size={20} color="#1DB954" />
             <h3 className="font-bold">Spotify</h3>
           </div>
           <p className="text-foreground-secondary text-sm">
-            Set your Spotify Client ID to enable playlist importing.
+            {t('connectedAccounts.spotify.description')}
           </p>
           <div className="flex items-center gap-2">
-            <Input 
+            <Input
               className="flex-1"
-              placeholder="Spotify Client ID" 
+              placeholder={t('connectedAccounts.spotify.clientIdPlaceholder')}
               value={spotify.clientId}
-              onChange={(e) => authStore.setClientId('spotify', e.target.value)}
+              onChange={(event) =>
+                authStore.setClientId('spotify', event.target.value)
+              }
             />
-            <Button 
+            <Button
               variant="secondary"
               disabled={!spotify.clientId}
               onClick={() => {
@@ -45,29 +45,36 @@ export const ConnectedAccountsSection: FC = () => {
                 }
               }}
             >
-              {spotify.accessToken ? 'Logout' : 'Login'}
+              {spotify.accessToken
+                ? t('connectedAccounts.logout')
+                : t('connectedAccounts.login')}
             </Button>
           </div>
-          {spotify.accessToken && <span className="text-accent-green text-xs">Logged in successfully</span>}
+          {spotify.accessToken && (
+            <span className="text-accent-green text-xs">
+              {t('connectedAccounts.loggedIn')}
+            </span>
+          )}
         </div>
 
-        {/* YouTube */}
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2">
             <Video size={20} color="#FF0000" />
             <h3 className="font-bold">YouTube</h3>
           </div>
           <p className="text-foreground-secondary text-sm">
-            Set your YouTube API Client ID to enable playlist importing.
+            {t('connectedAccounts.youtube.description')}
           </p>
           <div className="flex items-center gap-2">
-            <Input 
+            <Input
               className="flex-1"
-              placeholder="YouTube Client ID" 
+              placeholder={t('connectedAccounts.youtube.clientIdPlaceholder')}
               value={youtube.clientId}
-              onChange={(e) => authStore.setClientId('youtube', e.target.value)}
+              onChange={(event) =>
+                authStore.setClientId('youtube', event.target.value)
+              }
             />
-            <Button 
+            <Button
               variant="secondary"
               disabled={!youtube.clientId}
               onClick={() => {
@@ -78,12 +85,17 @@ export const ConnectedAccountsSection: FC = () => {
                 }
               }}
             >
-              {youtube.accessToken ? 'Logout' : 'Login'}
+              {youtube.accessToken
+                ? t('connectedAccounts.logout')
+                : t('connectedAccounts.login')}
             </Button>
           </div>
-          {youtube.accessToken && <span className="text-accent-green text-xs">Logged in successfully</span>}
+          {youtube.accessToken && (
+            <span className="text-accent-green text-xs">
+              {t('connectedAccounts.loggedIn')}
+            </span>
+          )}
         </div>
-
       </div>
     </SectionShell>
   );

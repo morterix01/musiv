@@ -1,5 +1,5 @@
 import { Import, Link } from 'lucide-react';
-import { type FC, useState } from 'react';
+import { useState, type FC } from 'react';
 
 import { useTranslation } from '@nuclearplayer/i18n';
 import { Button, Popover } from '@nuclearplayer/ui';
@@ -52,7 +52,10 @@ export const ImportPlaylistMenu: FC = () => {
         </Popover.Menu>
       </Popover>
       <ImportFromUrlDialog />
-      <ImportExternalPlaylistDialog isOpen={isExternalOpen} onClose={() => setIsExternalOpen(false)} />
+      <ImportExternalPlaylistDialog
+        isOpen={isExternalOpen}
+        onClose={() => setIsExternalOpen(false)}
+      />
     </>
   );
 };

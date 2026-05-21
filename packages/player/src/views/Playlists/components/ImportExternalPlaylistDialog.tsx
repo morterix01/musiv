@@ -1,11 +1,17 @@
 import { Music, Video } from 'lucide-react';
-import { type FC, useState } from 'react';
+import { useState, type FC } from 'react';
 
 import { useTranslation } from '@nuclearplayer/i18n';
 import { Button, Dialog, Loader } from '@nuclearplayer/ui';
 
-import { spotifyService, type SpotifyPlaylistSummary } from '../../../services/spotifyService';
-import { youtubeService, type YtPlaylistSummary } from '../../../services/youtubeService';
+import {
+  spotifyService,
+  type SpotifyPlaylistSummary,
+} from '../../../services/spotifyService';
+import {
+  youtubeService,
+  type YtPlaylistSummary,
+} from '../../../services/youtubeService';
 import { useAuthStore } from '../../../stores/authStore';
 import { usePlaylistStore } from '../../../stores/playlistStore';
 
@@ -18,8 +24,11 @@ type ExternalPlaylist =
   | { provider: 'spotify'; data: SpotifyPlaylistSummary }
   | { provider: 'youtube'; data: YtPlaylistSummary };
 
-export const ImportExternalPlaylistDialog: FC<Props> = ({ isOpen, onClose }) => {
-  const { t } = useTranslation('playlists');
+export const ImportExternalPlaylistDialog: FC<Props> = ({
+  isOpen,
+  onClose,
+}) => {
+  const { t } = useTranslation();
   const importPlaylist = usePlaylistStore((state) => state.importPlaylist);
   const spotifyAuth = useAuthStore((state) => state.spotify);
   const youtubeAuth = useAuthStore((state) => state.youtube);
@@ -28,7 +37,9 @@ export const ImportExternalPlaylistDialog: FC<Props> = ({ isOpen, onClose }) => 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [importing, setImporting] = useState<string | null>(null);
-  const [activeProvider, setActiveProvider] = useState<'spotify' | 'youtube' | null>(null);
+  const [activeProvider, setActiveProvider] = useState<
+    'spotify' | 'youtube' | null
+  >(null);
 
   const fetchSpotify = async () => {
     setLoading(true);
@@ -36,9 +47,15 @@ export const ImportExternalPlaylistDialog: FC<Props> = ({ isOpen, onClose }) => 
     setActiveProvider('spotify');
     try {
       const items = await spotifyService.getPlaylists();
-      setPlaylists(items.map((data) => ({ provider: 'spotify' as const, data })));
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error fetching Spotify playlists');
+      setPlaylists(
+        items.map((data) => ({ provider: 'spotify' as const, data })),
+      );
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : t('playlists.importExternalErrors.spotifyFetch'),
+      );
     } finally {
       setLoading(false);
     }
@@ -50,9 +67,15 @@ export const ImportExternalPlaylistDialog: FC<Props> = ({ isOpen, onClose }) => 
     setActiveProvider('youtube');
     try {
       const items = await youtubeService.getPlaylists();
-      setPlaylists(items.map((data) => ({ provider: 'youtube' as const, data })));
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error fetching YouTube playlists');
+      setPlaylists(
+        items.map((data) => ({ provider: 'youtube' as const, data })),
+      );
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : t('playlists.importExternalErrors.youtubeFetch'),
+      );
     } finally {
       setLoading(false);
     }
@@ -61,15 +84,17 @@ export const ImportExternalPlaylistDialog: FC<Props> = ({ isOpen, onClose }) => 
   const handleImport = async (item: ExternalPlaylist) => {
     setImporting(item.data.id);
     try {
-      let playlist;
-      if (item.provider === 'spotify') {
-        playlist = await spotifyService.importPlaylist(item.data as SpotifyPlaylistSummary);
-      } else {
-        playlist = await youtubeService.importPlaylist(item.data as YtPlaylistSummary);
-      }
+      const playlist =
+        item.provider === 'spotify'
+          ? await spotifyService.importPlaylist(item.data)
+          : await youtubeService.importPlaylist(item.data);
       await importPlaylist(playlist);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Import failed');
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : t('playlists.importExternalErrors.import'),
+      );
     } finally {
       setImporting(null);
     }
@@ -77,10 +102,17 @@ export const ImportExternalPlaylistDialog: FC<Props> = ({ isOpen, onClose }) => 
 
   const handleLogin = async (provider: 'spotify' | 'youtube') => {
     try {
-      if (provider === 'spotify') await spotifyService.startLogin();
-      else await youtubeService.startLogin();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Login failed');
+      if (provider === 'spotify') {
+        await spotifyService.startLogin();
+      } else {
+        await youtubeService.startLogin();
+      }
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : t('playlists.importExternalErrors.login'),
+      );
     }
   };
 
@@ -90,16 +122,21 @@ export const ImportExternalPlaylistDialog: FC<Props> = ({ isOpen, onClose }) => 
   const hasYoutubeClientId = !!youtubeAuth.clientId;
 
   return (
-    <Dialog isOpen={isOpen} onClose={onClose} title={t('importExternal', 'Import from account')}>
+    <Dialog
+      isOpen={isOpen}
+      onClose={onClose}
+      title={t('playlists.importExternal')}
+    >
       <div className="flex min-h-[400px] w-full max-w-lg flex-col gap-4">
-        {/* Provider selector */}
         <div className="flex gap-2">
           <Button
             variant={activeProvider === 'spotify' ? 'default' : 'secondary'}
             className="flex flex-1 items-center gap-2"
             onClick={() => {
               if (!hasSpotifyClientId) {
-                setError('Spotify Client ID not set. Configure it in Settings → Connected Accounts.');
+                setError(
+                  t('playlists.importExternalErrors.spotifyClientIdMissing'),
+                );
                 return;
               }
               if (!hasSpotifyToken) {
@@ -111,14 +148,20 @@ export const ImportExternalPlaylistDialog: FC<Props> = ({ isOpen, onClose }) => 
           >
             <Music size={16} color="#1DB954" />
             Spotify
-            {!hasSpotifyToken && <span className="ml-auto text-xs opacity-60">Login required</span>}
+            {!hasSpotifyToken && (
+              <span className="ml-auto text-xs opacity-60">
+                {t('playlists.loginRequired')}
+              </span>
+            )}
           </Button>
           <Button
             variant={activeProvider === 'youtube' ? 'default' : 'secondary'}
             className="flex flex-1 items-center gap-2"
             onClick={() => {
               if (!hasYoutubeClientId) {
-                setError('YouTube Client ID not set. Configure it in Settings → Connected Accounts.');
+                setError(
+                  t('playlists.importExternalErrors.youtubeClientIdMissing'),
+                );
                 return;
               }
               if (!hasYoutubeToken) {
@@ -130,40 +173,42 @@ export const ImportExternalPlaylistDialog: FC<Props> = ({ isOpen, onClose }) => 
           >
             <Video size={16} color="#FF0000" />
             YouTube
-            {!hasYoutubeToken && <span className="ml-auto text-xs opacity-60">Login required</span>}
+            {!hasYoutubeToken && (
+              <span className="ml-auto text-xs opacity-60">
+                {t('playlists.loginRequired')}
+              </span>
+            )}
           </Button>
         </div>
 
-        {/* Error */}
         {error && (
-          <div className="rounded-md bg-accent-red/20 px-3 py-2 text-sm text-accent-red">
+          <div className="bg-accent-red/20 text-accent-red rounded-md px-3 py-2 text-sm">
             {error}
           </div>
         )}
 
-        {/* Loading */}
         {loading && (
           <div className="flex flex-1 items-center justify-center">
             <Loader />
           </div>
         )}
 
-        {/* Playlist list */}
         {!loading && playlists.length > 0 && (
           <div className="flex flex-1 flex-col gap-2 overflow-y-auto">
             {playlists.map((item) => {
-              const id = item.provider === 'spotify' 
-                ? (item.data as SpotifyPlaylistSummary).id 
-                : (item.data as YtPlaylistSummary).id;
-              const name = item.provider === 'spotify'
-                ? (item.data as SpotifyPlaylistSummary).name
-                : (item.data as YtPlaylistSummary).snippet.title;
-              const count = item.provider === 'spotify'
-                ? (item.data as SpotifyPlaylistSummary).tracks.total
-                : (item.data as YtPlaylistSummary).contentDetails.itemCount;
-              const thumb = item.provider === 'spotify'
-                ? (item.data as SpotifyPlaylistSummary).images?.[0]?.url
-                : (item.data as YtPlaylistSummary).snippet.thumbnails?.default?.url;
+              const id = item.data.id;
+              const name =
+                item.provider === 'spotify'
+                  ? item.data.name
+                  : item.data.snippet.title;
+              const count =
+                item.provider === 'spotify'
+                  ? item.data.tracks.total
+                  : item.data.contentDetails.itemCount;
+              const thumb =
+                item.provider === 'spotify'
+                  ? item.data.images?.[0]?.url
+                  : item.data.snippet.thumbnails?.default?.url;
 
               return (
                 <div
@@ -179,14 +224,16 @@ export const ImportExternalPlaylistDialog: FC<Props> = ({ isOpen, onClose }) => 
                   )}
                   <div className="flex min-w-0 flex-1 flex-col">
                     <span className="truncate text-sm font-medium">{name}</span>
-                    <span className="text-foreground-secondary text-xs">{count} tracks</span>
+                    <span className="text-foreground-secondary text-xs">
+                      {t('playlists.trackCount', { count })}
+                    </span>
                   </div>
                   <Button
                     size="sm"
                     disabled={importing === id}
                     onClick={() => handleImport(item)}
                   >
-                    {importing === id ? <Loader /> : t('import', 'Import')}
+                    {importing === id ? <Loader /> : t('playlists.import')}
                   </Button>
                 </div>
               );
@@ -196,7 +243,7 @@ export const ImportExternalPlaylistDialog: FC<Props> = ({ isOpen, onClose }) => 
 
         {!loading && playlists.length === 0 && !error && activeProvider && (
           <div className="text-foreground-secondary flex flex-1 items-center justify-center text-sm">
-            No playlists found
+            {t('playlists.importNoPlaylists')}
           </div>
         )}
       </div>

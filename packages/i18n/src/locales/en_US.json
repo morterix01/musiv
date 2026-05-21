@@ -103,6 +103,16 @@
     "importBatchSuccess": "{{count}} playlists imported",
     "importError": "Failed to import playlist",
     "importNoPlaylists": "No playlists found in this file",
+    "importExternal": "Import from account",
+    "loginRequired": "Login required",
+    "importExternalErrors": {
+      "spotifyFetch": "Error fetching Spotify playlists",
+      "youtubeFetch": "Error fetching YouTube playlists",
+      "import": "Import failed",
+      "login": "Login failed",
+      "spotifyClientIdMissing": "Spotify Client ID not set. Configure it in Settings > Connected Accounts.",
+      "youtubeClientIdMissing": "YouTube Client ID not set. Configure it in Settings > Connected Accounts."
+    },
     "importUrl": "Import from URL",
     "importUrlTitle": "Import playlist from URL",
     "importUrlPlaceholder": "Paste a playlist URL...",
@@ -267,6 +277,20 @@
   },
   "preferences": {
     "title": "Preferences",
+    "connectedAccounts": {
+      "title": "Connected Accounts",
+      "login": "Login",
+      "logout": "Logout",
+      "loggedIn": "Logged in successfully",
+      "spotify": {
+        "description": "Set your Spotify Client ID to enable playlist importing.",
+        "clientIdPlaceholder": "Spotify Client ID"
+      },
+      "youtube": {
+        "description": "Set your YouTube API Client ID to enable playlist importing.",
+        "clientIdPlaceholder": "YouTube Client ID"
+      }
+    },
     "general": {
       "title": "General",
       "language": {

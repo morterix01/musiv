@@ -3,12 +3,12 @@ import ReactDOM from 'react-dom/client';
 
 import App from './App';
 import { registerBuiltInCoreSettings } from './services/coreSettings';
+import { initializeAuthStore } from './stores/authStore';
 import { initializeFavoritesStore } from './stores/favoritesStore';
 import { initializePlaylistStore } from './stores/playlistStore';
 import { initializeQueueStore } from './stores/queueStore';
 import { initializeSettingsStore } from './stores/settingsStore';
 import { initializeShortcutsStore } from './stores/shortcutsStore';
-import { initializeAuthStore } from './stores/authStore';
 
 import '@nuclearplayer/tailwind-config';
 import '@nuclearplayer/themes';

@@ -1,12 +1,13 @@
-import { useQueueStore } from '../stores/queueStore';
 import { FC } from 'react';
+
+import { useQueueStore } from '../stores/queueStore';
 
 export const AmbientBackground: FC = () => {
   const currentItem = useQueueStore((state) => state.getCurrentItem());
   const thumbnail = currentItem?.track?.artwork?.items?.[0]?.url;
 
   return (
-    <div className="pointer-events-none fixed inset-0 -z-10 bg-background transition-colors duration-1000">
+    <div className="bg-background pointer-events-none fixed inset-0 -z-10 transition-colors duration-1000">
       {thumbnail && (
         <>
           <div
@@ -16,7 +17,7 @@ export const AmbientBackground: FC = () => {
               transform: 'scale(1.2)', // Prevent blur edges from showing
             }}
           />
-          <div className="absolute inset-0 bg-background/50 transition-colors duration-1000 dark:bg-background/70" />
+          <div className="bg-background/50 dark:bg-background/70 absolute inset-0 transition-colors duration-1000" />
         </>
       )}
     </div>

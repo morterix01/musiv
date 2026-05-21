@@ -1,5 +1,17 @@
 [
   {
+    "date": "2026-05-21T00:00",
+    "description": "Import playlists from connected Spotify and YouTube accounts",
+    "type": "feature",
+    "contributors": ["morterix01"],
+    "tags": [
+      {
+        "label": "Playlists",
+        "color": "cyan"
+      }
+    ]
+  },
+  {
     "date": "2026-05-11T00:00",
     "description": "MPD server lets you control Nuclear from MPD clients like mpc and ncmpcpp",
     "type": "feature",

@@ -1,7 +1,7 @@
 /**
  * Spotify OAuth2 PKCE Service
  *
- * Uses Authorization Code with PKCE flow — suitable for desktop (Tauri) apps.
+ * Uses Authorization Code with PKCE flow for desktop (Tauri) apps.
  * The user's Client ID must be provided (set in settings).
  * The redirect URI is a custom scheme handled by Tauri deep links: nuclear://spotify-callback
  *
@@ -58,7 +58,9 @@ export const spotifyService = {
    */
   startLogin: async (): Promise<void> => {
     const { clientId } = useAuthStore.getState().spotify;
-    if (!clientId) throw new Error('Spotify Client ID not configured');
+    if (!clientId) {
+      throw new Error('Spotify Client ID not configured');
+    }
 
     _codeVerifier = generateCodeVerifier();
     const challenge = await generateCodeChallenge(_codeVerifier);
@@ -80,7 +82,9 @@ export const spotifyService = {
    * Call this from your Tauri deep link listener.
    */
   handleCallback: async (code: string): Promise<void> => {
-    if (!_codeVerifier) throw new Error('No code verifier found. Start login first.');
+    if (!_codeVerifier) {
+      throw new Error('No code verifier found. Start login first.');
+    }
     const { clientId } = useAuthStore.getState().spotify;
 
     const body = new URLSearchParams({
@@ -97,7 +101,9 @@ export const spotifyService = {
       body: body.toString(),
     });
 
-    if (!res.ok) throw new Error(`Spotify token exchange failed: ${res.status}`);
+    if (!res.ok) {
+      throw new Error(`Spotify token exchange failed: ${res.status}`);
+    }
 
     const data = await res.json();
     await useAuthStore.getState().setTokens('spotify', {
@@ -112,7 +118,9 @@ export const spotifyService = {
   /** Refresh an expired access token using the stored refresh token. */
   refreshToken: async (): Promise<void> => {
     const { clientId, refreshToken } = useAuthStore.getState().spotify;
-    if (!refreshToken) throw new Error('No refresh token stored for Spotify');
+    if (!refreshToken) {
+      throw new Error('No refresh token stored for Spotify');
+    }
 
     const body = new URLSearchParams({
       grant_type: 'refresh_token',
@@ -126,7 +134,9 @@ export const spotifyService = {
       body: body.toString(),
     });
 
-    if (!res.ok) throw new Error(`Spotify token refresh failed: ${res.status}`);
+    if (!res.ok) {
+      throw new Error(`Spotify token refresh failed: ${res.status}`);
+    }
 
     const data = await res.json();
     await useAuthStore.getState().setTokens('spotify', {
@@ -143,7 +153,9 @@ export const spotifyService = {
       await spotifyService.refreshToken();
       token = useAuthStore.getState().getValidToken('spotify');
     }
-    if (!token) throw new Error('Unable to obtain Spotify access token');
+    if (!token) {
+      throw new Error('Unable to obtain Spotify access token');
+    }
     return token;
   },
 
@@ -153,7 +165,9 @@ export const spotifyService = {
     const res = await fetch(`${SPOTIFY_API_BASE}${path}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!res.ok) throw new Error(`Spotify API error ${res.status}: ${path}`);
+    if (!res.ok) {
+      throw new Error(`Spotify API error ${res.status}: ${path}`);
+    }
     return res.json();
   },
 
@@ -166,9 +180,7 @@ export const spotifyService = {
       const page = (await spotifyService._fetch(url)) as SpotifyPlaylistPage;
       results.push(...page.items);
       // Spotify returns full next URL; strip base
-      url = page.next
-        ? page.next.replace(SPOTIFY_API_BASE, '')
-        : null;
+      url = page.next ? page.next.replace(SPOTIFY_API_BASE, '') : null;
     }
 
     return results;
@@ -182,7 +194,9 @@ export const spotifyService = {
     while (url) {
       const page = (await spotifyService._fetch(url)) as SpotifyTracksPage;
       for (const item of page.items) {
-        if (!item.track || item.track.type !== 'track') continue;
+        if (!item.track || item.track.type !== 'track') {
+          continue;
+        }
         tracks.push(spotifyTrackToNuclear(item.track));
       }
       url = page.next ? page.next.replace(SPOTIFY_API_BASE, '') : null;
@@ -192,7 +206,9 @@ export const spotifyService = {
   },
 
   /** Import a Spotify playlist directly into Nuclear's playlist store. */
-  importPlaylist: async (spotifyPlaylist: SpotifyPlaylistSummary): Promise<Playlist> => {
+  importPlaylist: async (
+    spotifyPlaylist: SpotifyPlaylistSummary,
+  ): Promise<Playlist> => {
     const tracks = await spotifyService.getPlaylistTracks(spotifyPlaylist.id);
     const now = new Date().toISOString();
 

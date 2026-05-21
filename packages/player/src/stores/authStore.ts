@@ -43,10 +43,8 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
   loadFromDisk: async () => {
     try {
-      const spotify =
-        (await store.get<ServiceAuth>('spotify')) ?? DEFAULT_AUTH;
-      const youtube =
-        (await store.get<ServiceAuth>('youtube')) ?? DEFAULT_AUTH;
+      const spotify = (await store.get<ServiceAuth>('spotify')) ?? DEFAULT_AUTH;
+      const youtube = (await store.get<ServiceAuth>('youtube')) ?? DEFAULT_AUTH;
       set({ spotify, youtube, isLoaded: true });
     } catch (error) {
       console.warn('Failed to load auth store, using defaults', error);
@@ -83,8 +81,12 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
   getValidToken: (service) => {
     const auth = get()[service];
-    if (!auth.accessToken) return null;
-    if (auth.expiresAt && Date.now() > auth.expiresAt - 60_000) return null;
+    if (!auth.accessToken) {
+      return null;
+    }
+    if (auth.expiresAt && Date.now() > auth.expiresAt - 60_000) {
+      return null;
+    }
     return auth.accessToken;
   },
 }));

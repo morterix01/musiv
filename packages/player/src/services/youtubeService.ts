@@ -52,7 +52,9 @@ export const youtubeService = {
   /** Open Google login in system browser. */
   startLogin: async (): Promise<void> => {
     const { clientId } = useAuthStore.getState().youtube;
-    if (!clientId) throw new Error('YouTube Client ID not configured');
+    if (!clientId) {
+      throw new Error('YouTube Client ID not configured');
+    }
 
     _codeVerifier = generateCodeVerifier();
     const challenge = await generateCodeChallenge(_codeVerifier);
@@ -73,7 +75,9 @@ export const youtubeService = {
 
   /** Exchange the auth code from the deep link callback for tokens. */
   handleCallback: async (code: string): Promise<void> => {
-    if (!_codeVerifier) throw new Error('No code verifier. Call startLogin first.');
+    if (!_codeVerifier) {
+      throw new Error('No code verifier. Call startLogin first.');
+    }
     const { clientId } = useAuthStore.getState().youtube;
 
     const body = new URLSearchParams({
@@ -90,7 +94,9 @@ export const youtubeService = {
       body: body.toString(),
     });
 
-    if (!res.ok) throw new Error(`YouTube token exchange failed: ${res.status}`);
+    if (!res.ok) {
+      throw new Error(`YouTube token exchange failed: ${res.status}`);
+    }
 
     const data = await res.json();
     await useAuthStore.getState().setTokens('youtube', {
@@ -105,7 +111,9 @@ export const youtubeService = {
   /** Refresh an expired token. */
   refreshToken: async (): Promise<void> => {
     const { clientId, refreshToken } = useAuthStore.getState().youtube;
-    if (!refreshToken) throw new Error('No refresh token for YouTube');
+    if (!refreshToken) {
+      throw new Error('No refresh token for YouTube');
+    }
 
     const body = new URLSearchParams({
       grant_type: 'refresh_token',
@@ -119,7 +127,9 @@ export const youtubeService = {
       body: body.toString(),
     });
 
-    if (!res.ok) throw new Error(`YouTube token refresh failed: ${res.status}`);
+    if (!res.ok) {
+      throw new Error(`YouTube token refresh failed: ${res.status}`);
+    }
 
     const data = await res.json();
     await useAuthStore.getState().setTokens('youtube', {
@@ -136,16 +146,23 @@ export const youtubeService = {
       await youtubeService.refreshToken();
       token = useAuthStore.getState().getValidToken('youtube');
     }
-    if (!token) throw new Error('Unable to obtain YouTube access token');
+    if (!token) {
+      throw new Error('Unable to obtain YouTube access token');
+    }
     return token;
   },
 
   /** Internal authenticated fetch helper. */
-  _fetch: async (path: string, params: Record<string, string> = {}): Promise<unknown> => {
+  _fetch: async (
+    path: string,
+    params: Record<string, string> = {},
+  ): Promise<unknown> => {
     const token = await youtubeService.getToken();
     const qs = new URLSearchParams({ ...params, access_token: token });
     const res = await fetch(`${YT_API_BASE}${path}?${qs.toString()}`);
-    if (!res.ok) throw new Error(`YouTube API error ${res.status}: ${path}`);
+    if (!res.ok) {
+      throw new Error(`YouTube API error ${res.status}: ${path}`);
+    }
     return res.json();
   },
 
@@ -191,7 +208,9 @@ export const youtubeService = {
       pageToken = page.nextPageToken;
     } while (pageToken);
 
-    if (videoIds.length === 0) return [];
+    if (videoIds.length === 0) {
+      return [];
+    }
 
     // Step 2: batch fetch video details (max 50 per request)
     const tracks: Track[] = [];
@@ -266,7 +285,9 @@ const ytVideoToNuclear = (video: YtVideo): Track => {
 
 const iso8601DurationToMs = (duration: string): number => {
   const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
-  if (!match) return 0;
+  if (!match) {
+    return 0;
+  }
   const [, h = '0', m = '0', s = '0'] = match;
   return (parseInt(h) * 3600 + parseInt(m) * 60 + parseInt(s)) * 1000;
 };
