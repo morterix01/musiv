@@ -10,11 +10,11 @@ exports[`PlayerShell > matches snapshot with complete layout 1`] = `
       data-tauri-drag-region="true"
     />
     <div
-      class="bg-background-secondary relative grid h-full min-h-0 grid-cols-[auto_1fr_auto]"
+      class="bg-background-secondary/80 relative grid h-full min-h-0 grid-cols-[auto_1fr_auto]"
     >
       <div
         animate="[object Object]"
-        class="bg-background-secondary border-border relative flex flex-col overflow-hidden border-r-(length:--border-width) p-2"
+        class="bg-background-secondary/80 border-border relative flex flex-col overflow-hidden border-r-(length:--border-width) p-2"
         transition="[object Object]"
       >
         <span
@@ -60,12 +60,12 @@ exports[`PlayerShell > matches snapshot with complete layout 1`] = `
         />
       </div>
       <main
-        class="bg-background-secondary overflow-auto"
+        class="bg-background-secondary/80 overflow-auto"
         data-testid="player-workspace-main"
       />
       <div
         animate="[object Object]"
-        class="bg-background-secondary border-border relative flex flex-col overflow-hidden border-l-(length:--border-width) p-2"
+        class="bg-background-secondary/80 border-border relative flex flex-col overflow-hidden border-l-(length:--border-width) p-2"
         transition="[object Object]"
       >
         <span
