@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tauri dev",
     "build": "tsc && vite build && tauri build",
-    "build:frontend": "tsc && vite build",
+    "build:frontend": "pnpm exec tsc && pnpm exec vite build",
     "tauri": "tauri",
     "preview": "vite preview",
     "lint": "eslint .",
