@@ -30,6 +30,19 @@ fn maximize_for_gamescope(app: &tauri::App) {
 pub fn run() {
     let is_flatpak = std::env::var("FLATPAK_ID").is_ok();
 
+    let context = tauri::generate_context!();
+
+    // Only register the updater plugin when its configuration is actually
+    // present and non-null. Builds made without updater secrets null out
+    // `plugins.updater`, and registering the plugin against a null config
+    // panics during initialization, killing the app before its window appears.
+    let updater_configured = context
+        .config()
+        .plugins
+        .0
+        .get("updater")
+        .is_some_and(|value| !value.is_null());
+
     let mut builder = tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
@@ -39,9 +52,10 @@ pub fn run() {
         .plugin(setup::log_plugin());
 
     if !is_flatpak {
-        builder = builder
-            .plugin(tauri_plugin_updater::Builder::new().build())
-            .plugin(tauri_plugin_process::init());
+        if updater_configured {
+            builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
+        }
+        builder = builder.plugin(tauri_plugin_process::init());
     }
 
     builder
@@ -81,6 +95,6 @@ pub fn run() {
 
             Ok(())
         })
-        .run(tauri::generate_context!())
+        .run(context)
         .expect("error while running tauri application");
 }
