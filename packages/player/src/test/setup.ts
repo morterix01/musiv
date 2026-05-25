@@ -15,6 +15,18 @@ Element.prototype.setPointerCapture = vi.fn();
 Element.prototype.releasePointerCapture = vi.fn();
 Element.prototype.scrollIntoView = vi.fn();
 
+const makeCanvas2dContextMock = () =>
+  ({
+    clearRect: vi.fn(),
+    fillRect: vi.fn(),
+    createLinearGradient: () => ({ addColorStop: vi.fn() }),
+    fillStyle: '',
+  }) as unknown as CanvasRenderingContext2D;
+
+HTMLCanvasElement.prototype.getContext = vi.fn(
+  () => makeCanvas2dContextMock(),
+) as typeof HTMLCanvasElement.prototype.getContext;
+
 // Silences react's pointless warning spam
 // give it a rest already
 const originalError = console.error;
