@@ -18,7 +18,6 @@ import { initLogStream } from './hooks/useLogStream';
 import { startAdvancedThemeWatcher } from './services/advancedThemeDirService';
 import { applyAdvancedThemeFromSettingsIfAny } from './services/advancedThemeService';
 import { initBridgeHandler } from './services/bridge/bridgeHandler';
-import { spotifyConnectService } from './services/spotifyConnectService';
 import { initDiscordHandler } from './services/discordHandler';
 import { initDiscoveryService } from './services/discoveryService';
 import {
@@ -29,6 +28,7 @@ import { loadMarketplaceThemes } from './services/marketplaceThemeDirService';
 import { initMcpHandler } from './services/mcp';
 import { initMpdHandler } from './services/mpd';
 import { hydratePluginsFromRegistry } from './services/plugins/pluginBootstrap';
+import { spotifyConnectService } from './services/spotifyConnectService';
 import { ytdlpEnsureInstalled } from './services/tauri/commands';
 import { hydrateThemeStore } from './stores/themeStore';
 import { useUpdaterStore } from './stores/updaterStore';

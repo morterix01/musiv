@@ -1,4 +1,4 @@
-import { spotifyService, SpotifyPlaylistSummary } from './spotifyService';
+import { SpotifyPlaylistSummary, spotifyService } from './spotifyService';
 
 type SpotifyFeaturedPlaylistsResponse = {
   playlists: {

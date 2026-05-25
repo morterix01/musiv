@@ -1,14 +1,22 @@
 import { useQuery } from '@tanstack/react-query';
 import { TrendingUp } from 'lucide-react';
 import { useCallback, type FC } from 'react';
+import { toast } from 'sonner';
 
 import { useTranslation } from '@nuclearplayer/i18n';
 import type { Track } from '@nuclearplayer/model';
-import { Button, Card, CardGrid, EmptyState, Loader, ScrollableArea, ViewShell } from '@nuclearplayer/ui';
-import { toast } from 'sonner';
+import {
+  Button,
+  Card,
+  CardGrid,
+  EmptyState,
+  Loader,
+  ScrollableArea,
+  ViewShell,
+} from '@nuclearplayer/ui';
 
-import type { SpotifyPlaylistSummary } from '../../services/spotifyService';
 import { spotifyChartsService } from '../../services/spotifyChartsService';
+import type { SpotifyPlaylistSummary } from '../../services/spotifyService';
 import { spotifyService } from '../../services/spotifyService';
 import { useAuthStore } from '../../stores/authStore';
 import { useQueueStore } from '../../stores/queueStore';
@@ -116,9 +124,7 @@ export const Charts: FC = () => {
           title={t('empty')}
           description={t('emptyDescription')}
           action={
-            <Button onClick={() => openSettings()}>
-              {t('emptyAction')}
-            </Button>
+            <Button onClick={() => openSettings()}>{t('emptyAction')}</Button>
           }
         />
       </ViewShell>

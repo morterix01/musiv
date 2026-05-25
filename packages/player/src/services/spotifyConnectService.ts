@@ -1,5 +1,5 @@
-import { spotifyService } from './spotifyService';
 import { useSpotifyConnectStore } from '../stores/spotifyConnectStore';
+import { spotifyService } from './spotifyService';
 
 type SpotifyWebPlaybackState = {
   paused: boolean;
@@ -27,10 +27,7 @@ type SpotifyWebPlayer = {
   seek: (positionMs: number) => Promise<void>;
   setVolume: (volume: number) => Promise<void>;
   getCurrentState: () => Promise<SpotifyWebPlaybackState | null>;
-  addListener: (
-    event: string,
-    callback: (data: unknown) => void,
-  ) => boolean;
+  addListener: (event: string, callback: (data: unknown) => void) => boolean;
   removeListener: (event: string) => boolean;
 };
 
@@ -116,7 +113,10 @@ export const spotifyConnectService = {
     player = new window.Spotify.Player({
       name: PLAYER_NAME,
       getOAuthToken: (cb) => {
-        spotifyService.getToken().then(cb).catch(() => {});
+        spotifyService
+          .getToken()
+          .then(cb)
+          .catch(() => {});
       },
       volume: 0.8,
     });
