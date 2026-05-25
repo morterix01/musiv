@@ -116,7 +116,7 @@ export const Charts: FC = () => {
           title={t('empty')}
           description={t('emptyDescription')}
           action={
-            <Button onClick={openSettings}>
+            <Button onClick={() => openSettings()}>
               {t('emptyAction')}
             </Button>
           }
