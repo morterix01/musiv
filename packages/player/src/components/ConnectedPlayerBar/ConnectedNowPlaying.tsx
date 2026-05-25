@@ -1,4 +1,5 @@
 import { FC } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 
 import { useTranslation } from '@nuclearplayer/i18n';
 import { pickArtwork } from '@nuclearplayer/model';
@@ -13,10 +14,12 @@ export const ConnectedNowPlaying: FC = () => {
   const { t: tTrack } = useTranslation('track');
   const currentItem = useQueueStore((state) => state.getCurrentItem());
   const { isTrackFavorite, addTrack, removeTrack } = useFavoritesStore();
-  const spotifyConnect = useSpotifyConnectStore((state) => ({
-    isActive: state.isActive,
-    currentTrack: state.currentTrack,
-  }));
+  const spotifyConnect = useSpotifyConnectStore(
+    useShallow((state) => ({
+      isActive: state.isActive,
+      currentTrack: state.currentTrack,
+    })),
+  );
 
   if (spotifyConnect.isActive && spotifyConnect.currentTrack) {
     const connectTrack = spotifyConnect.currentTrack;
