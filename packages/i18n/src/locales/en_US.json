@@ -33,7 +33,19 @@
     "favoriteTracks": "Favorite tracks",
     "favoriteArtists": "Favorite artists",
     "playlists": "Playlists",
+    "charts": "Charts",
     "sources": "Sources"
+  },
+  "charts": {
+    "title": "Charts",
+    "topCharts": "Top Charts",
+    "featured": "Featured Playlists",
+    "empty": "Connect your Spotify account to see charts",
+    "emptyDescription": "Login with Spotify to browse top charts and featured playlists.",
+    "emptyAction": "Go to Settings",
+    "trackCount": "{{count}} track",
+    "trackCount_other": "{{count}} tracks",
+    "loadError": "Failed to load playlist tracks"
   },
   "sources": {
     "title": "Sources",
@@ -283,7 +295,7 @@
       "logout": "Logout",
       "loggedIn": "Logged in successfully",
       "spotify": {
-        "description": "Set your Spotify Client ID to enable playlist importing.",
+        "description": "Set your Spotify Client ID to enable playlist importing, Charts, and Spotify Connect (Premium required for Connect).",
         "clientIdPlaceholder": "Spotify Client ID"
       },
       "youtube": {
@@ -450,7 +462,8 @@
     "repeatAll": "Repeat: all",
     "repeatOne": "Repeat: one",
     "discoveryOn": "Discovery: on",
-    "discoveryOff": "Discovery: off"
+    "discoveryOff": "Discovery: off",
+    "spotifyConnect": "Spotify Connect"
   },
   "logs": {
     "title": "Logs",

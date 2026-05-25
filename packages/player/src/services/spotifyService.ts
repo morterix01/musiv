@@ -20,6 +20,12 @@ const SPOTIFY_TOKEN_URL = 'https://accounts.spotify.com/api/token';
 const SPOTIFY_API_BASE = 'https://api.spotify.com/v1';
 const REDIRECT_URI = 'nuclear://spotify-callback';
 const SCOPES = [
+  'streaming',
+  'user-read-email',
+  'user-read-private',
+  'user-read-playback-state',
+  'user-modify-playback-state',
+  'user-read-currently-playing',
   'playlist-read-private',
   'playlist-read-collaborative',
   'user-library-read',

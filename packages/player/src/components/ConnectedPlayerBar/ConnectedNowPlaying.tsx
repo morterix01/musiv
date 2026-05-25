@@ -6,12 +6,33 @@ import { FavoriteButton, PlayerBar } from '@nuclearplayer/ui';
 
 import { useFavoritesStore } from '../../stores/favoritesStore';
 import { useQueueStore } from '../../stores/queueStore';
+import { useSpotifyConnectStore } from '../../stores/spotifyConnectStore';
 
 export const ConnectedNowPlaying: FC = () => {
   const { t } = useTranslation('playerBar');
   const { t: tTrack } = useTranslation('track');
-  const currentItem = useQueueStore((s) => s.getCurrentItem());
+  const currentItem = useQueueStore((state) => state.getCurrentItem());
   const { isTrackFavorite, addTrack, removeTrack } = useFavoritesStore();
+  const spotifyConnect = useSpotifyConnectStore((state) => ({
+    isActive: state.isActive,
+    currentTrack: state.currentTrack,
+  }));
+
+  if (spotifyConnect.isActive && spotifyConnect.currentTrack) {
+    const connectTrack = spotifyConnect.currentTrack;
+    return (
+      <PlayerBar.NowPlaying
+        title={connectTrack.name}
+        artist={connectTrack.artist}
+        coverUrl={connectTrack.artworkUrl ?? undefined}
+        action={
+          <span className="text-accent-green shrink-0 text-xs font-semibold">
+            {t('spotifyConnect')}
+          </span>
+        }
+      />
+    );
+  }
 
   const track = currentItem?.track;
   const isFavorite = track ? isTrackFavorite(track.source) : false;

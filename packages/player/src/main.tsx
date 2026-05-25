@@ -18,6 +18,7 @@ import { initLogStream } from './hooks/useLogStream';
 import { startAdvancedThemeWatcher } from './services/advancedThemeDirService';
 import { applyAdvancedThemeFromSettingsIfAny } from './services/advancedThemeService';
 import { initBridgeHandler } from './services/bridge/bridgeHandler';
+import { spotifyConnectService } from './services/spotifyConnectService';
 import { initDiscordHandler } from './services/discordHandler';
 import { initDiscoveryService } from './services/discoveryService';
 import {
@@ -45,6 +46,7 @@ initializeSettingsStore()
   .then(() => initMcpHandler())
   .then(() => initMpdHandler())
   .then(() => initBridgeHandler())
+  .then(() => spotifyConnectService.init())
   .then(() => initDiscordHandler())
   .then(() => applyLanguageFromSettings())
   .then(() => initLanguageWatcher())

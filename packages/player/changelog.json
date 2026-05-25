@@ -1,5 +1,25 @@
 [
   {
+    "date": "2026-05-25T00:00",
+    "description": "Spotify Connect lets Nuclear appear as a playback device in the Spotify app (Premium required). New Charts view shows top charts and featured playlists from Spotify. Audio visualizer shows frequency bars in the player bar.",
+    "type": "feature",
+    "contributors": ["luissrome"],
+    "tags": [
+      {
+        "label": "Spotify",
+        "color": "green"
+      },
+      {
+        "label": "Visualizer",
+        "color": "purple"
+      },
+      {
+        "label": "Charts",
+        "color": "cyan"
+      }
+    ]
+  },
+  {
     "date": "2026-05-21T00:00",
     "description": "Import playlists from connected Spotify and YouTube accounts",
     "type": "feature",

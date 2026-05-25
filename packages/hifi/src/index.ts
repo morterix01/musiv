@@ -6,4 +6,5 @@ export { Volume } from './plugins/Volume';
 export { Stereo } from './plugins/Stereo';
 export { BiQuadFilter } from './plugins/BiQuadFilter';
 export { Equalizer } from './plugins/Equalizer';
+export { FrequencyAnalyzer } from './plugins/FrequencyAnalyzer';
 export { type AudioSource, type SoundStatus } from './types';

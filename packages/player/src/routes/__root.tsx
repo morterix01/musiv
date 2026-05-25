@@ -6,6 +6,7 @@ import {
   ListMusicIcon,
   MusicIcon,
   SettingsIcon,
+  TrendingUpIcon,
   UserIcon,
 } from 'lucide-react';
 
@@ -93,6 +94,11 @@ const RootComponent = () => {
                   to="/playlists"
                   icon={<ListMusicIcon />}
                   label={t('playlists')}
+                />
+                <SidebarNavigationItem
+                  to="/charts"
+                  icon={<TrendingUpIcon />}
+                  label={t('charts')}
                 />
                 <SidebarNavigationItem
                   to="/sources"

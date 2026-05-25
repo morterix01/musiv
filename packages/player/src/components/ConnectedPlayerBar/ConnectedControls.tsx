@@ -7,8 +7,10 @@ import { PlayerBar } from '@nuclearplayer/ui';
 
 import { useCoreSetting } from '../../hooks/useCoreSetting';
 import { useProviders } from '../../hooks/useProviders';
+import { spotifyConnectService } from '../../services/spotifyConnectService';
 import { useQueueStore } from '../../stores/queueStore';
 import { useSoundStore } from '../../stores/soundStore';
+import { useSpotifyConnectStore } from '../../stores/spotifyConnectStore';
 
 export const ConnectedControls: FC = () => {
   const { t } = useTranslation('playerBar');
@@ -32,6 +34,12 @@ export const ConnectedControls: FC = () => {
       toggle: state.toggle,
     })),
   );
+  const spotifyConnect = useSpotifyConnectStore(
+    useShallow((state) => ({
+      isActive: state.isActive,
+      isPlaying: state.isPlaying,
+    })),
+  );
 
   const handleToggleShuffle = () => {
     setShuffleEnabled(!shuffleEnabled);
@@ -48,14 +56,30 @@ export const ConnectedControls: FC = () => {
     setRepeatMode(modes[nextIndex]);
   };
 
+  const isPlaying = spotifyConnect.isActive
+    ? spotifyConnect.isPlaying
+    : status === 'playing';
+
+  const handlePlayPause = spotifyConnect.isActive
+    ? () => void spotifyConnectService.togglePlay()
+    : toggle;
+
+  const handleNext = spotifyConnect.isActive
+    ? () => void spotifyConnectService.nextTrack()
+    : goToNext;
+
+  const handlePrevious = spotifyConnect.isActive
+    ? () => void spotifyConnectService.previousTrack()
+    : goToPrevious;
+
   return (
     <PlayerBar.Controls
-      isPlaying={status === 'playing'}
+      isPlaying={isPlaying}
       isShuffleActive={Boolean(shuffleEnabled)}
       repeatMode={repeatMode ?? 'off'}
-      onPlayPause={toggle}
-      onNext={goToNext}
-      onPrevious={goToPrevious}
+      onPlayPause={handlePlayPause}
+      onNext={handleNext}
+      onPrevious={handlePrevious}
       onShuffleToggle={handleToggleShuffle}
       onRepeatToggle={handleToggleRepeat}
       isDiscoveryActive={hasDiscoveryProviders && Boolean(discoveryEnabled)}

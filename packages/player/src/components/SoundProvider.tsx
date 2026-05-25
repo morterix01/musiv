@@ -1,10 +1,11 @@
 import type { FC, PropsWithChildren } from 'react';
 import { useCallback, useEffect } from 'react';
 
-import { Sound, Volume } from '@nuclearplayer/hifi';
+import { FrequencyAnalyzer, Sound, Volume } from '@nuclearplayer/hifi';
 
 import { useCoreSetting } from '../hooks/useCoreSetting';
 import { eventBus } from '../services/eventBus';
+import { useVisualizerStore } from '../stores/visualizerStore';
 import { Logger } from '../services/logger';
 import { useQueueStore } from '../stores/queueStore';
 import { useSoundStore } from '../stores/soundStore';
@@ -12,6 +13,7 @@ import { resolveErrorMessage } from '../utils/logging';
 
 export const SoundProvider: FC<PropsWithChildren> = ({ children }) => {
   const { src, status, seek } = useSoundStore();
+  const setFrequencyData = useVisualizerStore((state) => state.setFrequencyData);
   const [crossfadeMs] = useCoreSetting<number>('playback.crossfadeMs');
   const preload: HTMLAudioElement['preload'] = 'auto';
   const crossOrigin = '' as const;
@@ -78,6 +80,7 @@ export const SoundProvider: FC<PropsWithChildren> = ({ children }) => {
           onCanPlay={handleCanPlay}
           onError={handleError}
         >
+          <FrequencyAnalyzer onFrequencyData={setFrequencyData} />
           <Volume value={volumePercent} />
         </Sound>
       )}

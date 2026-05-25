@@ -13,6 +13,7 @@ All commands run from the repo root unless noted:
 ```bash
 pnpm dev            # Start the player in dev mode (Tauri hot-reload)
 pnpm build          # Build all packages
+pnpm clean          # Clean build artifacts
 pnpm lint           # Lint all packages
 pnpm lint:fix       # Auto-fix linting issues
 pnpm test           # Run all tests
@@ -22,9 +23,11 @@ pnpm storybook      # Run Storybook for UI components
 pnpm tauri          # Run Tauri CLI for the player
 ```
 
-Run a single package's tests: `pnpm --filter @nuclearplayer/player test`
+Run a single package's tests by file: `pnpm --filter @nuclearplayer/player test -- src/path/to/file.test.ts`
 
-Run a single test file: `pnpm --filter @nuclearplayer/player exec vitest --run src/path/to/file.test.ts`
+Run tests matching a pattern: `pnpm --filter @nuclearplayer/player test -- --testNamePattern="renders"`
+
+Update snapshots: `pnpm test -- -u` (root) or `pnpm --filter @nuclearplayer/ui test -- -u`
 
 ## Architecture
 
@@ -50,12 +53,13 @@ packages/
 ### Player Package (packages/player)
 
 **Frontend** (`src/`):
-- `main.tsx` — React entry point with store hydration and service setup
+- `main.tsx` — React entry point: store hydration chain, then plugin/service init in background
 - `App.tsx` — Root component wiring router and query client
-- `routes/` — File-based routing via TanStack Router (auto-generated route tree)
+- `routes/` — File-based routing via TanStack Router (route tree is **auto-generated** — never edit `routeTree.gen.ts` manually)
 - `views/` — Feature views (Dashboard, Search, Artist, Album, Settings, etc.)
 - `stores/` — Zustand stores (queue, playlist, favorites, settings, etc.)
-- `services/` — Business logic layer (MCP, MPD, plugins, themes, bridge, etc.)
+- `services/` — Business logic layer (hosts, plugins, bridge, MCP, MPD, themes, etc.)
+- `apis/` — External API clients (one class per service, all using `ApiClient` base)
 
 **Rust backend** (`src-tauri/src/`):
 - `lib.rs` — Tauri app initialization and command registration
@@ -65,6 +69,17 @@ packages/
 - `ytdlp.rs` — yt-dlp integration for audio streams
 - `http.rs` — HTTP fetching and stream serving
 
+### Plugin / Domain Architecture
+
+Each feature domain follows a four-layer pattern:
+
+1. **Types** (`packages/plugin-sdk/src/types/myDomain.ts`) — `MyDomainHost` interface + exported types for plugins
+2. **API class** (`packages/plugin-sdk/src/api/myDomain.ts`) — wraps the host, exposes methods to plugins; registered in `NuclearAPI`
+3. **Store** (`packages/player/src/stores/myDomainStore.ts`) — Zustand store; persisted via `@tauri-apps/plugin-store` if needed
+4. **Host** (`packages/player/src/services/myDomainHost.ts`) — implements `MyDomainHost`; bridges SDK to the store; passed to `createPluginAPI`
+
+`createPluginAPI` (in `services/plugins/createPluginAPI.ts`) assembles all hosts into a `NuclearPluginAPI` instance per plugin. The bridge dispatcher (`services/bridge/bridgeDispatcher.ts`) routes MCP tool calls through this same API.
+
 ### State Management
 
 - **Zustand** — persistent UI state (queue, playlists, settings)
@@ -73,30 +88,130 @@ packages/
 
 ### Styling
 
-Tailwind v4 CSS-first setup. Configuration lives in `packages/tailwind-config/global.css` using `@theme` and `@layer` directives — there is no `tailwind.config.js`. **Do not use Tailwind's built-in color palette**; use the custom palette defined in `global.css`. Design direction: neo-brutalist with premium polish (Discord-like feel).
+Tailwind v4 CSS-first setup. Configuration lives in `packages/tailwind-config/global.css` using `@theme` and `@layer` directives — there is no `tailwind.config.js`. **Do not use Tailwind's built-in color palette**; use the custom palette defined in `global.css`.
+
+Named tokens to use: `bg-background`, `text-foreground`, `bg-primary`, and accents `accent-green`, `accent-yellow`, `accent-purple`, `accent-blue`, `accent-orange`, `accent-cyan`, `accent-red`.
+
+Design direction: neo-brutalist with premium polish (Discord-like feel). Bold borders, purposeful shadows. Avoid generic AI patterns (icon-grid cards, stock heroes).
 
 ## Coding Conventions
 
 - **TypeScript**: use `type`, not `interface` (except when declaration merging is required). Props are `type`, never `interface`.
 - **React components**: `const Component: FC<Props> = () => {}` — not `function Component()`.
 - **No magic numbers** — extract into named constants.
+- **No one-letter variable names** — `(build) => build.buildIndexEntry()`, not `(b) => b.buildIndexEntry()`.
 - **Compound components** (`Component.Sub`) for complex widgets.
 - **UI components are dumb/presentational** — keep business logic in services or stores.
 - **No inline comments** — if the why is not obvious from the code, it belongs in the commit message or PR description.
 - Complex or performance-critical logic belongs in Rust (Tauri commands), not the frontend.
 
-## Testing
+### UI Component Pattern
 
-- Framework: **Vitest + React Testing Library**
-- Test from the user's perspective — avoid mocks unless the dependency is external (HTTP, filesystem, Tauri IPC).
-- Snapshot tests cover basic rendering only; name them starting with `(Snapshot)`.
-- Extract DOM querying into helper wrappers; keep assertions in the test body.
+```tsx
+import { cva, VariantProps } from 'class-variance-authority';
+import { ComponentProps, FC } from 'react';
+import { cn } from '../../utils';
+
+const componentVariants = cva('base-classes', {
+  variants: { /* ... */ },
+  defaultVariants: { /* ... */ },
+});
+
+type ComponentProps = ComponentProps<'div'> & VariantProps<typeof componentVariants>;
+
+export const Component: FC<ComponentProps> = ({ className, variant, ...props }) => (
+  <div className={cn(componentVariants({ variant, className }))} {...props} />
+);
+```
+
+### Adding a UI Component to `@nuclearplayer/ui`
+
+1. Create `packages/ui/src/components/MyComponent/MyComponent.tsx`, `MyComponent.test.tsx`, `index.ts`
+2. Export from `packages/ui/src/components/index.ts`
+3. Add Storybook story in `packages/storybook/src/MyComponent.stories.tsx`
+4. Include snapshot test(s) covering all variants
+
+### External API Clients
+
+Live in `packages/player/src/apis/`. Use `ApiClient` base class (fetch → JSON → Zod validation). Export singleton instances. One class per external service.
+
+### Internationalization
+
+All user-facing strings go through i18n — no hardcoded UI text.
+
+```tsx
+import { useTranslation } from '@nuclearplayer/i18n';
+const { t } = useTranslation();
+<span>{t('navigation.settings')}</span>
+```
+
+Add new keys to `packages/i18n/src/locales/en_US.json` only. Other locales come from Crowdin.
 
 ## Key Conventions to Follow
 
 - Use shared configs — never duplicate ESLint, Prettier, TypeScript, or Tailwind config locally in a package when a shared one exists.
-- Use **Lucide React** for icons.
-- Use **framer-motion** + **tw-animate-css** for animations (springy physics; disable during high-friction moments like resize).
-- Use **sonner** for toasts.
+- **Icons**: Lucide React only.
+- **Toasts**: Sonner.
+- **Dates**: Luxon.
+- **Utilities**: lodash-es with individual imports — `import isEqual from 'lodash-es/isEqual'`.
+- **HTTP**: native fetch via `ApiClient` base class — no axios.
+- **Animations**: framer-motion + tw-animate-css (springy physics; disable during high-friction moments like resize/drag).
 - Routes follow TanStack Router file-based convention — add files under `src/routes/` and the route tree is auto-generated.
 - The plugin system has no sandboxing — treat plugin API surface as a public contract.
+
+## Testing
+
+Framework: **Vitest + React Testing Library**. Globals enabled (`describe`, `it`, `expect`, `vi`).
+
+- Integration tests over unit tests for user-facing behavior — render real components and assert on DOM.
+- Unit tests for standalone utilities (parsers, data structures like RingBuffer).
+- Test from the user's perspective — only mock external deps (HTTP, filesystem, Tauri IPC).
+- Snapshot tests cover basic rendering only; name them starting with `(Snapshot)`.
+- Never use `querySelector` or `fireEvent` in tests. Use RTL queries and `userEvent`.
+- When semantic queries aren't possible, add `data-testid` attributes.
+- No defensive measures (try-catch, conditional checks) in tests — let them fail clearly.
+
+### Test-First for Views
+
+Write the test wrapper and tests **before** any implementation code. Start from what the user sees on the page — internal structure falls out of making tests green.
+
+### Test Wrappers
+
+Views use a `*.test-wrapper.tsx` file that abstracts DOM queries. Tests read like user stories; only the wrapper knows about test IDs and DOM structure.
+
+- **Getters** for element queries: `get emptyState()`, `get cards()`
+- **Nested objects** for interactive elements: `createButton: { get element(), async click() }`
+- **Methods** for multi-step actions: `async openContextMenu(title: string)`
+- Expose a `fixtures` object with factory methods for common test scenarios
+- Use `getBy`/`findBy` in wrappers, not `queryBy`
+
+### Builder Pattern
+
+Test builders live in `packages/player/src/test/builders/`. A builder creates a default object on instantiation, exposes chainable mutation methods, and returns the final object via `build()`. Raw fixture data lives in `packages/player/src/test/fixtures/`.
+
+## Changelog
+
+`packages/player/changelog.json` is the source of truth for the in-app "What's New" tab and GitHub release notes. Add an entry at the top of the array for every user-facing feature, fix, or improvement.
+
+## Releasing
+
+### Nuclear Player
+
+Releases are triggered by git tags. Builds for macOS (arm64/x64), Linux, and Windows.
+
+```bash
+# 1. Bump version in packages/player/package.json and packages/player/src-tauri/tauri.conf.json
+git add packages/player/package.json packages/player/src-tauri/tauri.conf.json && git commit -m "player@X.Y.Z"
+git tag player@X.Y.Z
+git push origin master --tags
+```
+
+### Plugin SDK
+
+Published to npm via `release-plugin-sdk.yml`.
+
+```bash
+git add packages/plugin-sdk/package.json && git commit -m "plugin-sdk@X.Y.Z"
+git tag plugin-sdk@X.Y.Z
+git push origin master --tags
+```
