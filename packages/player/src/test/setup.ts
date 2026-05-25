@@ -123,6 +123,13 @@ const makeAudioContextMock = () => {
       connect: vi.fn(),
       disconnect: vi.fn(),
     }),
+    createAnalyser: () => ({
+      connect: vi.fn(),
+      disconnect: vi.fn(),
+      fftSize: 256,
+      frequencyBinCount: 128,
+      getByteFrequencyData: vi.fn(),
+    }),
     createGain: () => ({
       connect: () => ctx,
       disconnect: vi.fn(),

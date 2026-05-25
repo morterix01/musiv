@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ChartsRouteImport } from './routes/charts'
 import { Route as SourcesRouteImport } from './routes/sources'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as DashboardRouteImport } from './routes/dashboard'
@@ -22,6 +23,11 @@ import { Route as PlaylistsImportProviderIdRouteImport } from './routes/playlist
 import { Route as ArtistProviderIdArtistIdRouteImport } from './routes/artist/$providerId/$artistId'
 import { Route as AlbumProviderIdAlbumIdRouteImport } from './routes/album/$providerId/$albumId'
 
+const ChartsRoute = ChartsRouteImport.update({
+  id: '/charts',
+  path: '/charts',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SourcesRoute = SourcesRouteImport.update({
   id: '/sources',
   path: '/sources',
@@ -87,6 +93,7 @@ const AlbumProviderIdAlbumIdRoute = AlbumProviderIdAlbumIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/charts': typeof ChartsRoute
   '/dashboard': typeof DashboardRoute
   '/search': typeof SearchRoute
   '/sources': typeof SourcesRoute
@@ -101,6 +108,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/charts': typeof ChartsRoute
   '/dashboard': typeof DashboardRoute
   '/search': typeof SearchRoute
   '/sources': typeof SourcesRoute
@@ -116,6 +124,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/charts': typeof ChartsRoute
   '/dashboard': typeof DashboardRoute
   '/search': typeof SearchRoute
   '/sources': typeof SourcesRoute
@@ -132,6 +141,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/charts'
     | '/dashboard'
     | '/search'
     | '/sources'
@@ -146,6 +156,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/charts'
     | '/dashboard'
     | '/search'
     | '/sources'
@@ -160,6 +171,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/charts'
     | '/dashboard'
     | '/search'
     | '/sources'
@@ -175,6 +187,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ChartsRoute: typeof ChartsRoute
   DashboardRoute: typeof DashboardRoute
   SearchRoute: typeof SearchRoute
   SourcesRoute: typeof SourcesRoute
@@ -190,6 +203,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/charts': {
+      id: '/charts'
+      path: '/charts'
+      fullPath: '/charts'
+      preLoaderRoute: typeof ChartsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sources': {
       id: '/sources'
       path: '/sources'
@@ -279,6 +299,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ChartsRoute: ChartsRoute,
   DashboardRoute: DashboardRoute,
   SearchRoute: SearchRoute,
   SourcesRoute: SourcesRoute,
