@@ -23,8 +23,8 @@ const makeCanvas2dContextMock = () =>
     fillStyle: '',
   }) as unknown as CanvasRenderingContext2D;
 
-HTMLCanvasElement.prototype.getContext = vi.fn(
-  () => makeCanvas2dContextMock(),
+HTMLCanvasElement.prototype.getContext = vi.fn(() =>
+  makeCanvas2dContextMock(),
 ) as typeof HTMLCanvasElement.prototype.getContext;
 
 // Silences react's pointless warning spam

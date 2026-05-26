@@ -19,13 +19,17 @@ const LibrarySection: FC<LibrarySectionProps> = ({ title, testid, query }) => {
     <div data-testid={testid} className="flex flex-col gap-1">
       <h4 className="text-sm font-bold">{title}</h4>
       {query.isPending && (
-        <p className="text-foreground-secondary text-sm">{t('library.loading')}</p>
+        <p className="text-foreground-secondary text-sm">
+          {t('library.loading')}
+        </p>
       )}
       {query.isError && (
         <p className="text-accent-red text-sm">{t('library.error')}</p>
       )}
       {!query.isPending && !query.isError && names.length === 0 && (
-        <p className="text-foreground-secondary text-sm">{t('library.empty')}</p>
+        <p className="text-foreground-secondary text-sm">
+          {t('library.empty')}
+        </p>
       )}
       {names.length > 0 && (
         <ul className="flex flex-col gap-0.5">

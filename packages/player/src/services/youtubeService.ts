@@ -26,7 +26,8 @@ const SCOPES = 'https://www.googleapis.com/auth/youtube.readonly';
 // credentials in the Google Cloud Console (YouTube Data API v3), add the
 // redirect URI nuclear://youtube-callback, and paste the Client ID here. A
 // user-entered Client ID always takes priority.
-const DEFAULT_CLIENT_ID = '1031730045947-dudi31eemuesitq693s49gl9draneqq1.apps.googleusercontent.com';
+const DEFAULT_CLIENT_ID =
+  '1031730045947-dudi31eemuesitq693s49gl9draneqq1.apps.googleusercontent.com';
 
 // --- PKCE helpers (same pattern as Spotify) ---
 
@@ -52,7 +53,8 @@ const generateCodeChallenge = async (verifier: string): Promise<string> => {
 let _codeVerifier: string | null = null;
 
 const resolveClientId = (): string => {
-  const clientId = useAuthStore.getState().youtube.clientId || DEFAULT_CLIENT_ID;
+  const clientId =
+    useAuthStore.getState().youtube.clientId || DEFAULT_CLIENT_ID;
   if (!clientId) {
     throw new Error(
       'No YouTube Client ID configured. Add one in the Accounts page, or set a default in youtubeService.',

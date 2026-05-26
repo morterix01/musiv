@@ -4,7 +4,7 @@ import { useTranslation } from '@nuclearplayer/i18n';
 import { Badge, Button, ScrollableArea, ViewShell } from '@nuclearplayer/ui';
 
 import { useAuthStore } from '../../stores/authStore';
-import { type AccountService, ACCOUNT_SERVICES } from './accountServices';
+import { ACCOUNT_SERVICES, type AccountService } from './accountServices';
 import { SpotifyLibrary } from './SpotifyLibrary';
 import { YouTubeLibrary } from './YouTubeLibrary';
 
@@ -75,7 +75,10 @@ export const Accounts: FC = () => {
 
   return (
     <ViewShell title={t('title')}>
-      <div data-testid="accounts-view" className="flex w-full flex-1 overflow-hidden">
+      <div
+        data-testid="accounts-view"
+        className="flex w-full flex-1 overflow-hidden"
+      >
         <ScrollableArea className="flex-1 overflow-hidden">
           <div className="flex flex-col gap-4 px-2 pb-6">
             {ACCOUNT_SERVICES.map((service) => (

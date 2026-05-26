@@ -66,7 +66,8 @@ const generateCodeChallenge = async (verifier: string): Promise<string> => {
 let _codeVerifier: string | null = null;
 
 const resolveClientId = (): string => {
-  const clientId = useAuthStore.getState().spotify.clientId || DEFAULT_CLIENT_ID;
+  const clientId =
+    useAuthStore.getState().spotify.clientId || DEFAULT_CLIENT_ID;
   if (!clientId) {
     throw new Error(
       'No Spotify Client ID configured. Add one in the Accounts page, or set a default in spotifyService.',

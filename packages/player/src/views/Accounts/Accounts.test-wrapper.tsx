@@ -3,7 +3,12 @@ import {
   createRouter,
   type RouterHistory,
 } from '@tanstack/react-router';
-import { render, type RenderResult, screen, within } from '@testing-library/react';
+import {
+  render,
+  screen,
+  within,
+  type RenderResult,
+} from '@testing-library/react';
 
 import App from '../../App';
 import { routeTree } from '../../routeTree.gen';

@@ -88,7 +88,9 @@ describe('Accounts view', () => {
 
     expect(AccountsWrapper.library).toBeInTheDocument();
     expect(await screen.findByText('My Playlist')).toBeInTheDocument();
-    expect(await screen.findByText('Saved Song — Artist A')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Saved Song — Artist A'),
+    ).toBeInTheDocument();
     expect(await screen.findByText('Followed Artist')).toBeInTheDocument();
   });
 
