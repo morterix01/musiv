@@ -22,6 +22,11 @@ const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const YT_API_BASE = 'https://www.googleapis.com/youtube/v3';
 const REDIRECT_URI = 'nuclear://youtube-callback';
 const SCOPES = 'https://www.googleapis.com/auth/youtube.readonly';
+// Default app Client ID for one-click login. Create OAuth 2.0 Desktop App
+// credentials in the Google Cloud Console (YouTube Data API v3), add the
+// redirect URI nuclear://youtube-callback, and paste the Client ID here. A
+// user-entered Client ID always takes priority.
+const DEFAULT_CLIENT_ID = '1031730045947-dudi31eemuesitq693s49gl9draneqq1.apps.googleusercontent.com';
 
 // --- PKCE helpers (same pattern as Spotify) ---
 
@@ -46,15 +51,22 @@ const generateCodeChallenge = async (verifier: string): Promise<string> => {
 
 let _codeVerifier: string | null = null;
 
+const resolveClientId = (): string => {
+  const clientId = useAuthStore.getState().youtube.clientId || DEFAULT_CLIENT_ID;
+  if (!clientId) {
+    throw new Error(
+      'No YouTube Client ID configured. Add one in the Accounts page, or set a default in youtubeService.',
+    );
+  }
+  return clientId;
+};
+
 // --- Public API ---
 
 export const youtubeService = {
   /** Open Google login in system browser. */
   startLogin: async (): Promise<void> => {
-    const { clientId } = useAuthStore.getState().youtube;
-    if (!clientId) {
-      throw new Error('YouTube Client ID not configured');
-    }
+    const clientId = resolveClientId();
 
     _codeVerifier = generateCodeVerifier();
     const challenge = await generateCodeChallenge(_codeVerifier);
@@ -78,7 +90,7 @@ export const youtubeService = {
     if (!_codeVerifier) {
       throw new Error('No code verifier. Call startLogin first.');
     }
-    const { clientId } = useAuthStore.getState().youtube;
+    const clientId = resolveClientId();
 
     const body = new URLSearchParams({
       grant_type: 'authorization_code',
@@ -110,10 +122,11 @@ export const youtubeService = {
 
   /** Refresh an expired token. */
   refreshToken: async (): Promise<void> => {
-    const { clientId, refreshToken } = useAuthStore.getState().youtube;
+    const { refreshToken } = useAuthStore.getState().youtube;
     if (!refreshToken) {
       throw new Error('No refresh token for YouTube');
     }
+    const clientId = resolveClientId();
 
     const body = new URLSearchParams({
       grant_type: 'refresh_token',

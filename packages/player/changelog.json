@@ -1,6 +1,22 @@
 [
   {
     "date": "2026-05-25T00:00",
+    "description": "New Accounts page in the sidebar to connect streaming services. Spotify login now works end-to-end via deep-link OAuth callbacks and shows your playlists, saved songs, listening history, and followed artists.",
+    "type": "feature",
+    "contributors": ["luissrome"],
+    "tags": [
+      {
+        "label": "Accounts",
+        "color": "blue"
+      },
+      {
+        "label": "Spotify",
+        "color": "green"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-25T00:00",
     "description": "Spotify Connect lets Nuclear appear as a playback device in the Spotify app (Premium required). New Charts view shows top charts and featured playlists from Spotify. Audio visualizer shows frequency bars in the player bar.",
     "type": "feature",
     "contributors": ["luissrome"],

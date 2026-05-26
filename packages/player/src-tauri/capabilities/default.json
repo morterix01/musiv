@@ -152,6 +152,7 @@
     "store:default",
     "upload:default",
     "opener:default",
+    "deep-link:default",
     {
       "identifier": "opener:allow-reveal-item-in-dir",
       "allow": [

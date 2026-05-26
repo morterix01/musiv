@@ -45,6 +45,7 @@ pub fn run() {
 
     let mut builder = tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_store::Builder::new().build())
@@ -84,6 +85,15 @@ pub fn run() {
         ])
         .setup(|app| {
             logging::mark_startup_complete();
+
+            // Claim the nuclear:// scheme so OAuth callbacks
+            // (nuclear://spotify-callback?code=...) are routed back into the app.
+            #[cfg(desktop)]
+            {
+                use tauri_plugin_deep_link::DeepLinkExt;
+                let _ = app.deep_link().register_all();
+            }
+
             bridge::init_bridge(app.handle().clone());
             mcp::init_mcp(app.handle().clone());
             mpd::init_mpd(app.handle().clone());

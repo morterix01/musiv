@@ -34,7 +34,8 @@
     "favoriteArtists": "Favorite artists",
     "playlists": "Playlists",
     "charts": "Charts",
-    "sources": "Sources"
+    "sources": "Sources",
+    "accounts": "Accounts"
   },
   "charts": {
     "title": "Charts",
@@ -63,6 +64,30 @@
     "lockedReason": "<metadata>{{metadataName}}</metadata> metadata source requires <streaming>{{streamingName}}</streaming> streaming source.",
     "missingStreamingProvider": "Required streaming provider \"{{providerId}}\" is not available",
     "noProviders": "No providers installed"
+  },
+  "accounts": {
+    "title": "Accounts",
+    "login": "Login",
+    "logout": "Logout",
+    "connected": "Connected",
+    "comingSoon": "Coming soon",
+    "services": {
+      "spotify": {
+        "description": "Log in with Spotify to browse your playlists, saved songs, listening history, and followed artists."
+      },
+      "youtube": {
+        "description": "Log in with your Google account to browse your YouTube playlists."
+      }
+    },
+    "library": {
+      "playlists": "Playlists",
+      "savedTracks": "Saved songs",
+      "history": "Recently played",
+      "artists": "Followed artists",
+      "loading": "Loading…",
+      "empty": "Nothing here yet",
+      "error": "Failed to load. Try logging in again."
+    }
   },
   "discovery": {
     "recommendationError": "Failed to get recommendations"

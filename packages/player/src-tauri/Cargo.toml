@@ -35,6 +35,7 @@ http = "1.0"
 percent-encoding = "2.3"
 tempfile = "3.10"
 tauri-plugin-opener = "2"
+tauri-plugin-deep-link = "2"
 fix-path-env = { git = "https://github.com/tauri-apps/fix-path-env-rs" }
 rmcp = { version = "0.17", features = ["server", "transport-streamable-http-server"] }
 schemars = "1.0"

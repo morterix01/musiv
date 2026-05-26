@@ -1,7 +1,6 @@
 import { useTranslation } from '@nuclearplayer/i18n';
 import { ScrollableArea, ViewShell } from '@nuclearplayer/ui';
 
-import { ConnectedAccountsSection } from './ConnectedAccountsSection';
 import { SettingsSection } from './SettingsSection';
 import { useSettingsGroups } from './useSettingsGroups';
 
@@ -21,7 +20,6 @@ export const Settings = () => {
                 settings={group.settings}
               />
             ))}
-            <ConnectedAccountsSection />
           </div>
         </ScrollableArea>
       </div>

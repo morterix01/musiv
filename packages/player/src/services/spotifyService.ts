@@ -11,7 +11,12 @@
  */
 import { openUrl } from '@tauri-apps/plugin-opener';
 
-import type { Playlist, PlaylistItem, Track } from '@nuclearplayer/model';
+import type {
+  ArtistRef,
+  Playlist,
+  PlaylistItem,
+  Track,
+} from '@nuclearplayer/model';
 
 import { useAuthStore } from '../stores/authStore';
 
@@ -19,6 +24,11 @@ const SPOTIFY_AUTH_URL = 'https://accounts.spotify.com/authorize';
 const SPOTIFY_TOKEN_URL = 'https://accounts.spotify.com/api/token';
 const SPOTIFY_API_BASE = 'https://api.spotify.com/v1';
 const REDIRECT_URI = 'nuclear://spotify-callback';
+// Default app Client ID so login works out of the box. Register a free Spotify
+// app at https://developer.spotify.com/dashboard, add the redirect URI
+// nuclear://spotify-callback, and paste its Client ID here. PKCE client IDs are
+// public, so it is safe to ship. A user-entered Client ID always takes priority.
+const DEFAULT_CLIENT_ID = '2c64cfd6ffbf442693c62d24828fc726';
 const SCOPES = [
   'streaming',
   'user-read-email',
@@ -55,6 +65,16 @@ const generateCodeChallenge = async (verifier: string): Promise<string> => {
 // Store verifier in memory (valid for the lifetime of this flow)
 let _codeVerifier: string | null = null;
 
+const resolveClientId = (): string => {
+  const clientId = useAuthStore.getState().spotify.clientId || DEFAULT_CLIENT_ID;
+  if (!clientId) {
+    throw new Error(
+      'No Spotify Client ID configured. Add one in the Accounts page, or set a default in spotifyService.',
+    );
+  }
+  return clientId;
+};
+
 // --- Public API ---
 
 export const spotifyService = {
@@ -63,10 +83,7 @@ export const spotifyService = {
    * The app must handle the deep link callback nuclear://spotify-callback?code=...
    */
   startLogin: async (): Promise<void> => {
-    const { clientId } = useAuthStore.getState().spotify;
-    if (!clientId) {
-      throw new Error('Spotify Client ID not configured');
-    }
+    const clientId = resolveClientId();
 
     _codeVerifier = generateCodeVerifier();
     const challenge = await generateCodeChallenge(_codeVerifier);
@@ -91,7 +108,7 @@ export const spotifyService = {
     if (!_codeVerifier) {
       throw new Error('No code verifier found. Start login first.');
     }
-    const { clientId } = useAuthStore.getState().spotify;
+    const clientId = resolveClientId();
 
     const body = new URLSearchParams({
       grant_type: 'authorization_code',
@@ -123,10 +140,11 @@ export const spotifyService = {
 
   /** Refresh an expired access token using the stored refresh token. */
   refreshToken: async (): Promise<void> => {
-    const { clientId, refreshToken } = useAuthStore.getState().spotify;
+    const { refreshToken } = useAuthStore.getState().spotify;
     if (!refreshToken) {
       throw new Error('No refresh token stored for Spotify');
     }
+    const clientId = resolveClientId();
 
     const body = new URLSearchParams({
       grant_type: 'refresh_token',
@@ -240,9 +258,53 @@ export const spotifyService = {
 
     return playlist;
   },
+
+  /** Fetch the user's saved/liked tracks (first page, up to 50). */
+  getSavedTracks: async (): Promise<Track[]> => {
+    const page = (await spotifyService._fetch(
+      '/me/tracks?limit=50',
+    )) as SpotifyTracksPage;
+    return page.items
+      .filter((item) => item.track && item.track.type === 'track')
+      .map((item) => spotifyTrackToNuclear(item.track!));
+  },
+
+  /** Fetch recently played tracks (listening history, up to 50). */
+  getRecentlyPlayed: async (): Promise<Track[]> => {
+    const page = (await spotifyService._fetch(
+      '/me/player/recently-played?limit=50',
+    )) as SpotifyTracksPage;
+    return page.items
+      .filter((item) => item.track && item.track.type === 'track')
+      .map((item) => spotifyTrackToNuclear(item.track!));
+  },
+
+  /** Fetch the artists the user follows (up to 50). */
+  getFollowedArtists: async (): Promise<ArtistRef[]> => {
+    const page = (await spotifyService._fetch(
+      '/me/following?type=artist&limit=50',
+    )) as SpotifyFollowedArtistsPage;
+    return page.artists.items.map(spotifyArtistToNuclear);
+  },
+
+  /** Fetch the user's top artists (up to 50). */
+  getTopArtists: async (): Promise<ArtistRef[]> => {
+    const page = (await spotifyService._fetch(
+      '/me/top/artists?limit=50',
+    )) as SpotifyArtistsPage;
+    return page.items.map(spotifyArtistToNuclear);
+  },
 };
 
 // --- Type mappers ---
+
+const spotifyArtistToNuclear = (artist: SpotifyFullArtist): ArtistRef => ({
+  name: artist.name,
+  artwork: artist.images?.[0]
+    ? { items: [{ url: artist.images[0].url }] }
+    : undefined,
+  source: { provider: 'spotify', id: artist.id },
+});
 
 const spotifyTrackToNuclear = (t: SpotifyTrack): Track => ({
   title: t.name,
@@ -305,4 +367,19 @@ type SpotifyPlaylistPage = {
 type SpotifyTracksPage = {
   items: { track: SpotifyTrack | null }[];
   next: string | null;
+};
+
+type SpotifyFullArtist = {
+  id: string;
+  name: string;
+  images?: SpotifyImage[];
+};
+
+type SpotifyArtistsPage = {
+  items: SpotifyFullArtist[];
+  next: string | null;
+};
+
+type SpotifyFollowedArtistsPage = {
+  artists: { items: SpotifyFullArtist[]; next: string | null };
 };
