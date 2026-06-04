@@ -6,6 +6,7 @@ pub mod logging;
 pub mod mcp;
 pub mod mpd;
 pub mod net;
+pub mod oauth;
 mod setup;
 pub mod stream_server;
 pub mod ytdlp;
@@ -74,6 +75,8 @@ pub fn run() {
             mcp::mcp_stop,
             mpd::mpd_start,
             mpd::mpd_stop,
+            oauth::oauth_loopback_start,
+            oauth::oauth_loopback_wait,
             stream_server::stream_server_port,
             ytdlp_setup::ytdlp_ensure_installed,
             discord::discord_connect,
@@ -84,7 +87,11 @@ pub fn run() {
             bridge::bridge_notify
         ])
         .setup(|app| {
+            use tauri::Manager;
+
             logging::mark_startup_complete();
+
+            app.manage(oauth::OAuthLoopbackState::default());
 
             // Claim the nuclear:// scheme so OAuth callbacks
             // (nuclear://spotify-callback?code=...) are routed back into the app.

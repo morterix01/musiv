@@ -1,5 +1,21 @@
 [
   {
+    "date": "2026-06-04T00:00",
+    "description": "YouTube login now uses Google's loopback OAuth flow for desktop apps, fixing the \"app doesn't comply with Google's OAuth 2.0 policy\" error. Requires a Google \"Desktop app\" OAuth client (Client ID + Secret).",
+    "type": "fix",
+    "contributors": ["luissrome"],
+    "tags": [
+      {
+        "label": "Accounts",
+        "color": "blue"
+      },
+      {
+        "label": "YouTube",
+        "color": "red"
+      }
+    ]
+  },
+  {
     "date": "2026-05-25T00:00",
     "description": "New Accounts page in the sidebar to connect streaming services. Spotify login now works end-to-end via deep-link OAuth callbacks and shows your playlists, saved songs, listening history, and followed artists.",
     "type": "feature",

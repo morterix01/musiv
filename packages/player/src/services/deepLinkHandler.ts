@@ -3,16 +3,13 @@ import { toast } from 'sonner';
 
 import { Logger } from './logger';
 import { spotifyService } from './spotifyService';
-import { youtubeService } from './youtubeService';
 
 const CALLBACK_HANDLERS: Record<string, (code: string) => Promise<void>> = {
   'spotify-callback': spotifyService.handleCallback,
-  'youtube-callback': youtubeService.handleCallback,
 };
 
 const CALLBACK_LABELS: Record<string, string> = {
   'spotify-callback': 'Spotify',
-  'youtube-callback': 'YouTube',
 };
 
 const handleCallbackUrl = async (rawUrl: string): Promise<void> => {

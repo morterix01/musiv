@@ -1,33 +1,41 @@
 /**
  * YouTube OAuth2 Service
  *
- * Uses Google OAuth2 Authorization Code flow for desktop apps.
- * The user's Client ID must be provided (set in settings).
- * Redirect URI: nuclear://youtube-callback
+ * Uses Google's OAuth2 Authorization Code + PKCE flow for installed (desktop)
+ * apps. Google does not allow custom URI schemes for desktop clients, so the
+ * redirect target is a loopback address (http://127.0.0.1:<port>) served by a
+ * single-shot local server in the Tauri backend (see src-tauri/src/oauth.rs).
+ * Loopback ports do not need to be pre-registered for Desktop OAuth clients.
  *
  * Required Google Cloud Console setup:
- *   - OAuth 2.0 Desktop App credentials
+ *   - OAuth client of type "Desktop app" (provides Client ID + Client Secret;
+ *     the secret is not confidential for installed apps and may be shipped)
  *   - YouTube Data API v3 enabled
- *   - Redirect URI: nuclear://youtube-callback
+ *   - OAuth consent screen: add your account as a Test user (youtube.readonly
+ *     is a sensitive scope) or publish the app
  *   - Scopes: https://www.googleapis.com/auth/youtube.readonly
  */
+import { invoke } from '@tauri-apps/api/core';
 import { openUrl } from '@tauri-apps/plugin-opener';
+import { toast } from 'sonner';
 
 import type { Playlist, PlaylistItem, Track } from '@nuclearplayer/model';
 
 import { useAuthStore } from '../stores/authStore';
+import { Logger } from './logger';
 
 const GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const YT_API_BASE = 'https://www.googleapis.com/youtube/v3';
-const REDIRECT_URI = 'nuclear://youtube-callback';
+const LOOPBACK_HOST = '127.0.0.1';
 const SCOPES = 'https://www.googleapis.com/auth/youtube.readonly';
-// Default app Client ID for one-click login. Create OAuth 2.0 Desktop App
-// credentials in the Google Cloud Console (YouTube Data API v3), add the
-// redirect URI nuclear://youtube-callback, and paste the Client ID here. A
-// user-entered Client ID always takes priority.
+// Default app credentials for one-click login. Create an OAuth client of type
+// "Desktop app" in the Google Cloud Console (YouTube Data API v3) and paste its
+// Client ID and Client Secret here. Desktop clients are public, so shipping the
+// secret is expected. A user-entered Client ID always takes priority.
 const DEFAULT_CLIENT_ID =
   '1031730045947-dudi31eemuesitq693s49gl9draneqq1.apps.googleusercontent.com';
+const DEFAULT_CLIENT_SECRET = '';
 
 // --- PKCE helpers (same pattern as Spotify) ---
 
@@ -51,6 +59,7 @@ const generateCodeChallenge = async (verifier: string): Promise<string> => {
 };
 
 let _codeVerifier: string | null = null;
+let _redirectUri: string | null = null;
 
 const resolveClientId = (): string => {
   const clientId =
@@ -63,44 +72,67 @@ const resolveClientId = (): string => {
   return clientId;
 };
 
+const resolveClientSecret = (): string => DEFAULT_CLIENT_SECRET;
+
 // --- Public API ---
 
 export const youtubeService = {
-  /** Open Google login in system browser. */
+  /**
+   * Run the full Google login: open the consent page in the system browser,
+   * capture the authorization code via the loopback server, and exchange it for
+   * tokens. Resolves once the account is connected.
+   */
   startLogin: async (): Promise<void> => {
-    const clientId = resolveClientId();
+    try {
+      const clientId = resolveClientId();
 
-    _codeVerifier = generateCodeVerifier();
-    const challenge = await generateCodeChallenge(_codeVerifier);
+      const port = await invoke<number>('oauth_loopback_start');
+      _redirectUri = `http://${LOOPBACK_HOST}:${port}`;
 
-    const params = new URLSearchParams({
-      response_type: 'code',
-      client_id: clientId,
-      redirect_uri: REDIRECT_URI,
-      scope: SCOPES,
-      access_type: 'offline',
-      prompt: 'consent',
-      code_challenge_method: 'S256',
-      code_challenge: challenge,
-    });
+      _codeVerifier = generateCodeVerifier();
+      const challenge = await generateCodeChallenge(_codeVerifier);
 
-    await openUrl(`${GOOGLE_AUTH_URL}?${params.toString()}`);
+      const params = new URLSearchParams({
+        response_type: 'code',
+        client_id: clientId,
+        redirect_uri: _redirectUri,
+        scope: SCOPES,
+        access_type: 'offline',
+        prompt: 'consent',
+        code_challenge_method: 'S256',
+        code_challenge: challenge,
+      });
+
+      await openUrl(`${GOOGLE_AUTH_URL}?${params.toString()}`);
+
+      const code = await invoke<string>('oauth_loopback_wait');
+      await youtubeService.handleCallback(code);
+      toast.success('YouTube connected');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      Logger.app.error(`Failed to complete YouTube login: ${message}`);
+      toast.error(`YouTube login failed: ${message}`);
+    }
   },
 
-  /** Exchange the auth code from the deep link callback for tokens. */
+  /** Exchange the authorization code from the loopback callback for tokens. */
   handleCallback: async (code: string): Promise<void> => {
-    if (!_codeVerifier) {
+    if (!_codeVerifier || !_redirectUri) {
       throw new Error('No code verifier. Call startLogin first.');
     }
     const clientId = resolveClientId();
+    const clientSecret = resolveClientSecret();
 
     const body = new URLSearchParams({
       grant_type: 'authorization_code',
       code,
-      redirect_uri: REDIRECT_URI,
+      redirect_uri: _redirectUri,
       client_id: clientId,
       code_verifier: _codeVerifier,
     });
+    if (clientSecret) {
+      body.set('client_secret', clientSecret);
+    }
 
     const res = await fetch(GOOGLE_TOKEN_URL, {
       method: 'POST',
@@ -129,12 +161,16 @@ export const youtubeService = {
       throw new Error('No refresh token for YouTube');
     }
     const clientId = resolveClientId();
+    const clientSecret = resolveClientSecret();
 
     const body = new URLSearchParams({
       grant_type: 'refresh_token',
       refresh_token: refreshToken,
       client_id: clientId,
     });
+    if (clientSecret) {
+      body.set('client_secret', clientSecret);
+    }
 
     const res = await fetch(GOOGLE_TOKEN_URL, {
       method: 'POST',

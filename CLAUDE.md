@@ -101,6 +101,8 @@ Tailwind v4 CSS-first setup. Configuration lives in `packages/tailwind-config/gl
 
 Named tokens to use: `bg-background`, `text-foreground`, `bg-primary`, and accents `accent-green`, `accent-yellow`, `accent-purple`, `accent-blue`, `accent-orange`, `accent-cyan`, `accent-red`.
 
+Typography is standardized at the design-system level — defaults are applied to common HTML tags (body, headings), so you rarely set fonts manually. When you do, use the `font-sans` and `font-heading` utilities rather than hardcoded font families.
+
 Design direction: neo-brutalist with premium polish (Discord-like feel). Bold borders, purposeful shadows. Avoid generic AI patterns (icon-grid cards, stock heroes).
 
 ## Coding Conventions
