@@ -2,6 +2,7 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { spotifyService } from '../../services/spotifyService';
+import { youtubeService } from '../../services/youtubeService';
 import { useAuthStore } from '../../stores/authStore';
 import { AccountsWrapper } from './Accounts.test-wrapper';
 
