@@ -28,7 +28,7 @@ const REDIRECT_URI = 'nuclear://spotify-callback';
 // app at https://developer.spotify.com/dashboard, add the redirect URI
 // nuclear://spotify-callback, and paste its Client ID here. PKCE client IDs are
 // public, so it is safe to ship. A user-entered Client ID always takes priority.
-const DEFAULT_CLIENT_ID = '2c64cfd6ffbf442693c62d24828fc726';
+const DEFAULT_CLIENT_ID = 'ef2eee6b378e452bbf37743e28e8e143';
 const SCOPES = [
   'streaming',
   'user-read-email',

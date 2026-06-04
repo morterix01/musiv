@@ -30,12 +30,13 @@ const YT_API_BASE = 'https://www.googleapis.com/youtube/v3';
 const LOOPBACK_HOST = '127.0.0.1';
 const SCOPES = 'https://www.googleapis.com/auth/youtube.readonly';
 // Default app credentials for one-click login. Create an OAuth client of type
-// "Desktop app" in the Google Cloud Console (YouTube Data API v3) and paste its
-// Client ID and Client Secret here. Desktop clients are public, so shipping the
-// secret is expected. A user-entered Client ID always takes priority.
+// "Desktop app" in the Google Cloud Console (YouTube Data API v3). The Client ID
+// is public and shipped in the binary; the Client Secret is injected at build
+// time from the VITE_YOUTUBE_CLIENT_SECRET env var (a CI secret) to keep it out
+// of source control. A user-entered Client ID always takes priority.
 const DEFAULT_CLIENT_ID =
   '1031730045947-dudi31eemuesitq693s49gl9draneqq1.apps.googleusercontent.com';
-const DEFAULT_CLIENT_SECRET = '';
+const DEFAULT_CLIENT_SECRET = import.meta.env.VITE_YOUTUBE_CLIENT_SECRET ?? '';
 
 // --- PKCE helpers (same pattern as Spotify) ---
 
