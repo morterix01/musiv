@@ -70,6 +70,14 @@ jobs:
       - name: Test
         run: pnpm test
 
+      - name: Disable Updater for Fork (No Secrets)
+        if: env.TAURI_SIGNING_PRIVATE_KEY == ''
+        shell: bash
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+        run: |
+          node -e "const fs=require('fs'); let cfg=JSON.parse(fs.readFileSync('packages/player/src-tauri/tauri.conf.json')); cfg.bundle.createUpdaterArtifacts=false; delete cfg.plugins.updater; fs.writeFileSync('packages/player/src-tauri/tauri.conf.json', JSON.stringify(cfg, null, 2));"
+
       - name: Build
         run: pnpm build
         env:
