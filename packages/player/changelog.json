@@ -1,5 +1,85 @@
 [
   {
+    "date": "2026-08-07T00:00",
+    "description": "Spotify login now completes properly on Windows and Linux. The OAuth callback used to start a second copy of the app, so the window you returned to never received the token and kept showing the Login button.",
+    "type": "fix",
+    "contributors": ["luissrome"],
+    "tags": [
+      {
+        "label": "Accounts",
+        "color": "blue"
+      },
+      {
+        "label": "Spotify",
+        "color": "green"
+      }
+    ]
+  },
+  {
+    "date": "2026-08-07T00:00",
+    "description": "Saved songs, recently played and most played songs can now be imported from Spotify as regular editable playlists, alongside your real playlists.",
+    "type": "feature",
+    "contributors": ["luissrome"],
+    "tags": [
+      {
+        "label": "Playlists",
+        "color": "purple"
+      },
+      {
+        "label": "Spotify",
+        "color": "green"
+      }
+    ]
+  },
+  {
+    "date": "2026-08-07T00:00",
+    "description": "The Accounts page now also lists your most played songs and most played artists from Spotify.",
+    "type": "feature",
+    "contributors": ["luissrome"],
+    "tags": [
+      {
+        "label": "Accounts",
+        "color": "blue"
+      },
+      {
+        "label": "Spotify",
+        "color": "green"
+      }
+    ]
+  },
+  {
+    "date": "2026-08-07T00:00",
+    "description": "Fixed a crash when opening the Spotify playlist list. Playlists that Spotify returns without a track count no longer take the whole view down.",
+    "type": "fix",
+    "contributors": ["luissrome"],
+    "tags": [
+      {
+        "label": "Playlists",
+        "color": "purple"
+      },
+      {
+        "label": "Spotify",
+        "color": "green"
+      }
+    ]
+  },
+  {
+    "date": "2026-08-07T00:00",
+    "description": "The import-from-account dialog no longer shows raw translation keys, no longer claims the Spotify Client ID is missing when a default one ships with the app, and reports what Spotify actually replied instead of a bare error code.",
+    "type": "fix",
+    "contributors": ["luissrome"],
+    "tags": [
+      {
+        "label": "Playlists",
+        "color": "purple"
+      },
+      {
+        "label": "Accounts",
+        "color": "blue"
+      }
+    ]
+  },
+  {
     "date": "2026-06-04T00:00",
     "description": "YouTube login now uses Google's loopback OAuth flow for desktop apps, fixing the \"app doesn't comply with Google's OAuth 2.0 policy\" error. Requires a Google \"Desktop app\" OAuth client (Client ID + Secret).",
     "type": "fix",

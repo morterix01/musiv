@@ -6,6 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Nuclear is a free, open-source desktop music player (no ads, no tracking). This repo is a **rewrite** of the original Nuclear codebase — it is a Tauri v2 app with a React frontend and Rust backend, managed as a pnpm monorepo with Turborepo.
 
+`AGENTS.md` and `.github/copilot-instructions.md` carry near-identical guidance for other agents. A convention change belongs in all three files or they drift apart.
+
+`.agents/skills/` holds project skills worth reading before the matching task: `creating-components`, `host-pattern`, `writing-plugins`, `writing-docs`.
+
 ## Commands
 
 All commands run from the repo root unless noted:
@@ -62,12 +66,21 @@ packages/
 - `apis/` — External API clients (one class per service, all using `ApiClient` base)
 
 **Rust backend** (`src-tauri/src/`):
-- `lib.rs` — Tauri app initialization and command registration
+- `lib.rs` — Tauri app initialization, managed state, command registration
 - `commands.rs` — IPC commands exposed to the frontend
-- `mcp/` — Model Context Protocol server
-- `mpd/` — Music Player Daemon support
-- `ytdlp.rs` — yt-dlp integration for audio streams
-- `http.rs` — HTTP fetching and stream serving
+- `mcp/`, `mpd/`, `bridge/` — Model Context Protocol server, Music Player Daemon server, plugin bridge
+- `ytdlp.rs` / `ytdlp_setup.rs` — yt-dlp integration for audio streams (binary auto-installed on boot)
+- `http.rs` — HTTP fetching for the frontend
+- `stream_server.rs` — local proxy that re-serves remote audio with forwarded headers; binds the first free port in 9100–9109
+- `oauth.rs` — single-shot loopback HTTP server for OAuth redirects; ports 9110–9119, 5 min timeout
+- `net.rs` — `bind_first_available_port` helper shared by the servers above
+- `discord.rs` — Discord rich presence
+
+### Application Boot Sequence
+
+`main.tsx` runs a **strictly ordered** promise chain: settings → shortcuts → auth → queue → favorites → playlists stores hydrate first, then core settings registration, then services (discovery, MCP, MPD, bridge, deep links, Spotify Connect, Discord, language, themes). Only plugin hydration, the update check, and yt-dlp install run detached at the end.
+
+New services that read settings or stores must be added to that chain **after** the hydration steps they depend on — a service initialized too early sees empty state.
 
 ### Plugin / Domain Architecture
 
@@ -78,16 +91,33 @@ Each feature domain follows a four-layer pattern:
 3. **Store** (`packages/player/src/stores/myDomainStore.ts`) — Zustand store; persisted via `@tauri-apps/plugin-store` if needed
 4. **Host** (`packages/player/src/services/myDomainHost.ts`) — implements `MyDomainHost`; bridges SDK to the store; passed to `createPluginAPI`
 
-`createPluginAPI` (in `services/plugins/createPluginAPI.ts`) assembles all hosts into a `NuclearPluginAPI` instance per plugin. The bridge dispatcher (`services/bridge/bridgeDispatcher.ts`) routes MCP tool calls through this same API.
+`createPluginAPI` (in `services/plugins/createPluginAPI.ts`) assembles all hosts into a `NuclearPluginAPI` instance per plugin.
 
-### OAuth / Deep Link Flow
+### Providers
 
-Connected accounts (Spotify, YouTube) use OAuth2 PKCE via Tauri's `@tauri-apps/plugin-deep-link`. The custom scheme `nuclear://` is registered in `tauri.conf.json` under `plugins.deep-link.desktop.schemes`.
+Providers are the extension point plugins use to supply actual content. `services/providersHost.ts` keeps a registry keyed by `ProviderKind` — `metadata`, `streaming`, `discovery`, `lyrics`, `dashboard`, `playlists` — with one **active** provider per kind (persisted in `stores/providersStore.ts`).
 
-- **`services/deepLinkHandler.ts`** — registers the OS-level URL listener; routes incoming `nuclear://<target>?code=...` URLs to per-service handlers via `CALLBACK_HANDLERS` and `CALLBACK_LABELS` maps.
-- Each service (e.g. `spotifyService`) exposes a `handleCallback(code)` method and a `login()` method that opens the provider's authorization URL with `@tauri-apps/plugin-opener`.
-- Auth tokens are persisted in `stores/authStore.ts`.
-- Adding a new OAuth provider: implement `login()` + `handleCallback()` in the service, add entries to both maps in `deepLinkHandler.ts`, register the redirect URI as `nuclear://<target>`.
+The player core never talks to a music service directly: it asks the active provider of a kind. A `MetadataProvider` may declare a `streamingProviderId`, and `streamingPairingSync.ts` keeps that pairing in sync so switching metadata source switches playback source with it. `streamingHost.ts` resolves a `StreamCandidate` on demand, re-resolving when it is older than `playback.streamExpiryMs`, with bounded retries.
+
+### External Control Surfaces
+
+Three entry points drive the app from outside, and all of them converge on the same plugin API rather than reaching into stores:
+
+- **Bridge** (`services/bridge/`) — `bridgeDispatcher.ts` takes a `"domain.method"` string plus named params, looks the signature up in `apiMeta` (from `@nuclearplayer/plugin-sdk/mcp`), maps named params to positional args, and calls the method on a `NuclearPluginAPI` instance created for the pseudo-plugin `"bridge"`. Adding an SDK method exposes it here automatically — no dispatcher changes.
+- **MCP server** (`services/mcp/` + `src-tauri/src/mcp/`) — Rust-side `rmcp` streamable-HTTP server, started on demand when `core.integrations.mcp.enabled` flips on; the frontend stores the resulting `http://127.0.0.1:<port>/mcp` URL in settings.
+- **MPD server** (`services/mpd/` + `src-tauri/src/mpd/`) — Music Player Daemon protocol for external MPD clients.
+
+### OAuth Flows
+
+Connected accounts use OAuth2 Authorization Code + PKCE, but via **two different redirect mechanisms** — pick based on what the provider allows:
+
+**Custom scheme / deep link** (Spotify) — `services/spotifyService.ts` + `services/deepLinkHandler.ts`. The `nuclear://` scheme is registered in `tauri.conf.json` under `plugins.deep-link.desktop.schemes`. `deepLinkHandler` registers the OS-level URL listener and routes `nuclear://<target>?code=...` to per-service handlers via the `CALLBACK_HANDLERS` / `CALLBACK_LABELS` maps. Adding a provider here means implementing `login()` + `handleCallback(code)` in the service and adding an entry to **both** maps.
+
+**Loopback server** (YouTube/Google) — `services/youtubeService.ts` + `src-tauri/src/oauth.rs`. Google rejects custom URI schemes for desktop clients, so the redirect target is `http://127.0.0.1:<port>` served by a single-shot Axum server in the Rust backend (first free port in 9110–9119, 5 min timeout). The frontend invokes a Tauri command to start the listener, opens the auth URL, and awaits the code. Loopback ports need no pre-registration in the Google Cloud Console.
+
+Both paths open the authorization URL with `@tauri-apps/plugin-opener` and persist tokens in `stores/authStore.ts`.
+
+Client IDs are public and shipped in the source. The Google **client secret** is not committed — it is injected at build time from `VITE_YOUTUBE_CLIENT_SECRET` (a CI secret, see `release-player.yml`). A local build without that env var compiles fine but YouTube login fails at the token exchange. A user-entered Client ID in the Accounts view always takes priority over the shipped default.
 
 ### State Management
 

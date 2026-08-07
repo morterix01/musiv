@@ -84,6 +84,8 @@
       "savedTracks": "Saved songs",
       "history": "Recently played",
       "artists": "Followed artists",
+      "topTracks": "Most played songs",
+      "topArtists": "Most played artists",
       "loading": "Loading…",
       "empty": "Nothing here yet",
       "error": "Failed to load. Try logging in again."
@@ -140,13 +142,21 @@
     "importBatchSuccess": "{{count}} playlists imported",
     "importError": "Failed to import playlist",
     "importNoPlaylists": "No playlists found in this file",
+    "import": "Import",
     "importExternal": "Import from account",
     "loginRequired": "Login required",
+    "collections": {
+      "savedTracks": "Saved songs",
+      "history": "Recently played",
+      "topTracks": "Most played songs"
+    },
     "importExternalErrors": {
       "spotifyFetch": "Error fetching Spotify playlists",
       "youtubeFetch": "Error fetching YouTube playlists",
       "import": "Import failed",
       "login": "Login failed",
+      "spotifyForbidden": "Spotify denied access to this playlist. It replied: {{detail}}",
+      "spotifyForbiddenNoDetail": "Spotify denied access to this playlist without giving a reason.",
       "spotifyClientIdMissing": "Spotify Client ID not set. Configure it in Settings > Connected Accounts.",
       "youtubeClientIdMissing": "YouTube Client ID not set. Configure it in Settings > Connected Accounts."
     },

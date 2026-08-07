@@ -44,7 +44,27 @@ pub fn run() {
         .get("updater")
         .is_some_and(|value| !value.is_null());
 
-    let mut builder = tauri::Builder::default()
+    let mut builder = tauri::Builder::default();
+
+    // Windows and Linux answer a nuclear:// URL by starting a second process.
+    // Without single-instance that second process receives the OAuth callback
+    // while the window the user comes back to never sees the token, so login
+    // silently appears to do nothing. Must be registered before every other
+    // plugin.
+    #[cfg(desktop)]
+    {
+        use tauri::Manager;
+
+        builder = builder.plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.show();
+                let _ = window.unminimize();
+                let _ = window.set_focus();
+            }
+        }));
+    }
+
+    builder = builder
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_dialog::init())

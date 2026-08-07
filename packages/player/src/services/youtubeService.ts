@@ -78,6 +78,10 @@ const resolveClientSecret = (): string => DEFAULT_CLIENT_SECRET;
 // --- Public API ---
 
 export const youtubeService = {
+  /** Whether a Client ID is available, from settings or the shipped default. */
+  hasClientId: (): boolean =>
+    Boolean(useAuthStore.getState().youtube.clientId || DEFAULT_CLIENT_ID),
+
   /**
    * Run the full Google login: open the consent page in the system browser,
    * capture the authorization code via the loopback server, and exchange it for

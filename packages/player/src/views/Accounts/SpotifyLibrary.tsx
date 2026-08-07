@@ -79,6 +79,15 @@ export const SpotifyLibrary: FC = () => {
     queryFn: async () =>
       (await spotifyService.getFollowedArtists()).map((artist) => artist.name),
   });
+  const topTracks = useQuery({
+    queryKey: ['spotify-library', 'top-tracks'],
+    queryFn: async () => (await spotifyService.getTopTracks()).map(trackLabel),
+  });
+  const topArtists = useQuery({
+    queryKey: ['spotify-library', 'top-artists'],
+    queryFn: async () =>
+      (await spotifyService.getTopArtists()).map((artist) => artist.name),
+  });
 
   return (
     <div data-testid="spotify-library" className="mt-2 flex flex-col gap-4">
@@ -101,6 +110,16 @@ export const SpotifyLibrary: FC = () => {
         title={t('library.artists')}
         testid="spotify-library-artists"
         query={artists}
+      />
+      <LibrarySection
+        title={t('library.topTracks')}
+        testid="spotify-library-top-tracks"
+        query={topTracks}
+      />
+      <LibrarySection
+        title={t('library.topArtists')}
+        testid="spotify-library-top-artists"
+        query={topArtists}
       />
     </div>
   );

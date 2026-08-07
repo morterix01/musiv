@@ -70,7 +70,11 @@ const ChartsSection: FC<ChartsSectionProps> = ({
               key={playlist.id}
               src={playlist.images?.[0]?.url}
               title={playlist.name}
-              subtitle={t('trackCount', { count: playlist.tracks.total })}
+              subtitle={
+                playlist.tracks
+                  ? t('trackCount', { count: playlist.tracks.total })
+                  : undefined
+              }
               onClick={() => onPlayAll(playlist)}
             />
           ))}

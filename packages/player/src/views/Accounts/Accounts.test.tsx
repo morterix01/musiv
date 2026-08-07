@@ -13,6 +13,8 @@ vi.mock('../../services/spotifyService', () => ({
     getSavedTracks: vi.fn(),
     getRecentlyPlayed: vi.fn(),
     getFollowedArtists: vi.fn(),
+    getTopTracks: vi.fn(),
+    getTopArtists: vi.fn(),
   },
 }));
 
@@ -74,6 +76,16 @@ describe('Accounts view', () => {
     vi.mocked(spotifyService.getFollowedArtists).mockResolvedValue([
       { name: 'Followed Artist', source: { provider: 'spotify', id: 'a1' } },
     ]);
+    vi.mocked(spotifyService.getTopTracks).mockResolvedValue([
+      {
+        title: 'Top Song',
+        artists: [{ name: 'Artist B' }],
+        source: { provider: 'spotify', id: 't1' },
+      },
+    ]);
+    vi.mocked(spotifyService.getTopArtists).mockResolvedValue([
+      { name: 'Top Artist', source: { provider: 'spotify', id: 'a2' } },
+    ]);
 
     useAuthStore.setState({
       spotify: {
@@ -93,6 +105,8 @@ describe('Accounts view', () => {
       await screen.findByText('Saved Song — Artist A'),
     ).toBeInTheDocument();
     expect(await screen.findByText('Followed Artist')).toBeInTheDocument();
+    expect(await screen.findByText('Top Song — Artist B')).toBeInTheDocument();
+    expect(await screen.findByText('Top Artist')).toBeInTheDocument();
   });
 
   it('shows the YouTube library when the account is connected', async () => {

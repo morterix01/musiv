@@ -123,6 +123,43 @@ export const PlaylistsWrapper = {
         },
       },
     },
+    fromAccount: {
+      async click() {
+        await PlaylistsWrapper.import.openMenu();
+        await user.click(screen.getByTestId('import-external-option'));
+      },
+      dialog: {
+        isOpen: () => DialogWrapper.isOpen(),
+        get title() {
+          return DialogWrapper.getByText('Import from account');
+        },
+        get loginHints() {
+          return within(DialogWrapper.panel).queryAllByText('Login required');
+        },
+        get error() {
+          return screen.queryByTestId('import-external-error');
+        },
+        get entryNames() {
+          return screen
+            .queryAllByTestId('import-external-entry-name')
+            .map((node) => node.textContent);
+        },
+        spotifyButton: {
+          get element() {
+            return DialogWrapper.getByText('Spotify');
+          },
+          async click() {
+            await user.click(this.element);
+          },
+        },
+        async importEntry(name: string) {
+          const entry = (
+            await screen.findAllByTestId('import-external-entry')
+          ).find((candidate) => within(candidate).queryByText(name) !== null)!;
+          await user.click(within(entry).getByRole('button'));
+        },
+      },
+    },
   },
 
   registerPlaylistProvider(provider: PlaylistProvider) {

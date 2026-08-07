@@ -2,10 +2,14 @@ import { Music, Video } from 'lucide-react';
 import { useState, type FC } from 'react';
 
 import { useTranslation } from '@nuclearplayer/i18n';
+import type { Playlist } from '@nuclearplayer/model';
 import { Button, Dialog, Loader } from '@nuclearplayer/ui';
 
 import {
+  SPOTIFY_COLLECTIONS,
+  SpotifyApiError,
   spotifyService,
+  type SpotifyCollectionId,
   type SpotifyPlaylistSummary,
 } from '../../../services/spotifyService';
 import {
@@ -22,13 +26,36 @@ type Props = {
 
 type ExternalPlaylist =
   | { provider: 'spotify'; data: SpotifyPlaylistSummary }
+  | { provider: 'spotifyCollection'; collection: SpotifyCollectionId }
   | { provider: 'youtube'; data: YtPlaylistSummary };
+
+const FORBIDDEN = 403;
+
+type ListEntry = {
+  key: string;
+  name: string;
+  count?: number;
+  thumbnail?: string;
+};
+
+const resolveImport = (
+  item: ExternalPlaylist,
+  name: string,
+): Promise<Playlist> => {
+  if (item.provider === 'spotifyCollection') {
+    return spotifyService.importCollection(item.collection, name);
+  }
+  if (item.provider === 'spotify') {
+    return spotifyService.importPlaylist(item.data);
+  }
+  return youtubeService.importPlaylist(item.data);
+};
 
 export const ImportExternalPlaylistDialog: FC<Props> = ({
   isOpen,
   onClose,
 }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('playlists');
   const importPlaylist = usePlaylistStore((state) => state.importPlaylist);
   const spotifyAuth = useAuthStore((state) => state.spotify);
   const youtubeAuth = useAuthStore((state) => state.youtube);
@@ -47,14 +74,18 @@ export const ImportExternalPlaylistDialog: FC<Props> = ({
     setActiveProvider('spotify');
     try {
       const items = await spotifyService.getPlaylists();
-      setPlaylists(
-        items.map((data) => ({ provider: 'spotify' as const, data })),
-      );
+      setPlaylists([
+        ...SPOTIFY_COLLECTIONS.map((collection) => ({
+          provider: 'spotifyCollection' as const,
+          collection,
+        })),
+        ...items.map((data) => ({ provider: 'spotify' as const, data })),
+      ]);
     } catch (error) {
       setError(
         error instanceof Error
           ? error.message
-          : t('playlists.importExternalErrors.spotifyFetch'),
+          : t('importExternalErrors.spotifyFetch'),
       );
     } finally {
       setLoading(false);
@@ -74,26 +105,68 @@ export const ImportExternalPlaylistDialog: FC<Props> = ({
       setError(
         error instanceof Error
           ? error.message
-          : t('playlists.importExternalErrors.youtubeFetch'),
+          : t('importExternalErrors.youtubeFetch'),
       );
     } finally {
       setLoading(false);
     }
   };
 
+  const collectionName = (collection: SpotifyCollectionId): string => {
+    switch (collection) {
+      case 'savedTracks':
+        return t('collections.savedTracks');
+      case 'history':
+        return t('collections.history');
+      case 'topTracks':
+        return t('collections.topTracks');
+    }
+  };
+
+  const toListEntry = (item: ExternalPlaylist): ListEntry => {
+    if (item.provider === 'spotifyCollection') {
+      return {
+        key: `collection-${item.collection}`,
+        name: collectionName(item.collection),
+      };
+    }
+    if (item.provider === 'spotify') {
+      return {
+        key: item.data.id,
+        name: item.data.name,
+        count: item.data.tracks?.total,
+        thumbnail: item.data.images?.[0]?.url,
+      };
+    }
+    return {
+      key: item.data.id,
+      name: item.data.snippet.title,
+      count: item.data.contentDetails.itemCount,
+      thumbnail: item.data.snippet.thumbnails?.default?.url,
+    };
+  };
+
   const handleImport = async (item: ExternalPlaylist) => {
-    setImporting(item.data.id);
+    const entry = toListEntry(item);
+    setImporting(entry.key);
     try {
-      const playlist =
-        item.provider === 'spotify'
-          ? await spotifyService.importPlaylist(item.data)
-          : await youtubeService.importPlaylist(item.data);
+      const playlist = await resolveImport(item, entry.name);
       await importPlaylist(playlist);
     } catch (error) {
+      if (error instanceof SpotifyApiError && error.status === FORBIDDEN) {
+        setError(
+          error.detail
+            ? t('importExternalErrors.spotifyForbidden', {
+                detail: error.detail,
+              })
+            : t('importExternalErrors.spotifyForbiddenNoDetail'),
+        );
+        return;
+      }
       setError(
         error instanceof Error
           ? error.message
-          : t('playlists.importExternalErrors.import'),
+          : t('importExternalErrors.import'),
       );
     } finally {
       setImporting(null);
@@ -111,22 +184,18 @@ export const ImportExternalPlaylistDialog: FC<Props> = ({
       setError(
         error instanceof Error
           ? error.message
-          : t('playlists.importExternalErrors.login'),
+          : t('importExternalErrors.login'),
       );
     }
   };
 
   const hasSpotifyToken = !!spotifyAuth.accessToken;
   const hasYoutubeToken = !!youtubeAuth.accessToken;
-  const hasSpotifyClientId = !!spotifyAuth.clientId;
-  const hasYoutubeClientId = !!youtubeAuth.clientId;
+  const hasSpotifyClientId = spotifyService.hasClientId();
+  const hasYoutubeClientId = youtubeService.hasClientId();
 
   return (
-    <Dialog
-      isOpen={isOpen}
-      onClose={onClose}
-      title={t('playlists.importExternal')}
-    >
+    <Dialog isOpen={isOpen} onClose={onClose} title={t('importExternal')}>
       <div className="flex min-h-[400px] w-full max-w-lg flex-col gap-4">
         <div className="flex gap-2">
           <Button
@@ -134,9 +203,7 @@ export const ImportExternalPlaylistDialog: FC<Props> = ({
             className="flex flex-1 items-center gap-2"
             onClick={() => {
               if (!hasSpotifyClientId) {
-                setError(
-                  t('playlists.importExternalErrors.spotifyClientIdMissing'),
-                );
+                setError(t('importExternalErrors.spotifyClientIdMissing'));
                 return;
               }
               if (!hasSpotifyToken) {
@@ -150,7 +217,7 @@ export const ImportExternalPlaylistDialog: FC<Props> = ({
             Spotify
             {!hasSpotifyToken && (
               <span className="ml-auto text-xs opacity-60">
-                {t('playlists.loginRequired')}
+                {t('loginRequired')}
               </span>
             )}
           </Button>
@@ -159,9 +226,7 @@ export const ImportExternalPlaylistDialog: FC<Props> = ({
             className="flex flex-1 items-center gap-2"
             onClick={() => {
               if (!hasYoutubeClientId) {
-                setError(
-                  t('playlists.importExternalErrors.youtubeClientIdMissing'),
-                );
+                setError(t('importExternalErrors.youtubeClientIdMissing'));
                 return;
               }
               if (!hasYoutubeToken) {
@@ -175,14 +240,17 @@ export const ImportExternalPlaylistDialog: FC<Props> = ({
             YouTube
             {!hasYoutubeToken && (
               <span className="ml-auto text-xs opacity-60">
-                {t('playlists.loginRequired')}
+                {t('loginRequired')}
               </span>
             )}
           </Button>
         </div>
 
         {error && (
-          <div className="bg-accent-red/20 text-accent-red rounded-md px-3 py-2 text-sm">
+          <div
+            data-testid="import-external-error"
+            className="bg-accent-red/20 text-accent-red rounded-md px-3 py-2 text-sm"
+          >
             {error}
           </div>
         )}
@@ -196,44 +264,40 @@ export const ImportExternalPlaylistDialog: FC<Props> = ({
         {!loading && playlists.length > 0 && (
           <div className="flex flex-1 flex-col gap-2 overflow-y-auto">
             {playlists.map((item) => {
-              const id = item.data.id;
-              const name =
-                item.provider === 'spotify'
-                  ? item.data.name
-                  : item.data.snippet.title;
-              const count =
-                item.provider === 'spotify'
-                  ? item.data.tracks.total
-                  : item.data.contentDetails.itemCount;
-              const thumb =
-                item.provider === 'spotify'
-                  ? item.data.images?.[0]?.url
-                  : item.data.snippet.thumbnails?.default?.url;
+              const { key, name, count, thumbnail } = toListEntry(item);
 
               return (
                 <div
-                  key={id}
+                  key={key}
+                  data-testid="import-external-entry"
                   className="bg-background-secondary/60 flex items-center gap-3 rounded-lg p-2"
                 >
-                  {thumb && (
+                  {thumbnail && (
                     <img
-                      src={thumb}
+                      src={thumbnail}
                       alt={name}
                       className="h-10 w-10 rounded object-cover"
                     />
                   )}
                   <div className="flex min-w-0 flex-1 flex-col">
-                    <span className="truncate text-sm font-medium">{name}</span>
-                    <span className="text-foreground-secondary text-xs">
-                      {t('playlists.trackCount', { count })}
+                    <span
+                      data-testid="import-external-entry-name"
+                      className="truncate text-sm font-medium"
+                    >
+                      {name}
                     </span>
+                    {count !== undefined && (
+                      <span className="text-foreground-secondary text-xs">
+                        {t('trackCount', { count })}
+                      </span>
+                    )}
                   </div>
                   <Button
                     size="sm"
-                    disabled={importing === id}
+                    disabled={importing === key}
                     onClick={() => handleImport(item)}
                   >
-                    {importing === id ? <Loader /> : t('playlists.import')}
+                    {importing === key ? <Loader /> : t('import')}
                   </Button>
                 </div>
               );
@@ -243,7 +307,7 @@ export const ImportExternalPlaylistDialog: FC<Props> = ({
 
         {!loading && playlists.length === 0 && !error && activeProvider && (
           <div className="text-foreground-secondary flex flex-1 items-center justify-center text-sm">
-            {t('playlists.importNoPlaylists')}
+            {t('importNoPlaylists')}
           </div>
         )}
       </div>

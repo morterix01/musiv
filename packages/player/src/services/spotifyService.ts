@@ -79,9 +79,53 @@ const resolveClientId = (): string => {
   return clientId;
 };
 
+export class SpotifyApiError extends Error {
+  readonly status: number;
+  readonly detail: string;
+
+  constructor(status: number, path: string, detail: string) {
+    super(
+      detail
+        ? `Spotify API error ${status}: ${detail} (${path})`
+        : `Spotify API error ${status}: ${path}`,
+    );
+    this.name = 'SpotifyApiError';
+    this.status = status;
+    this.detail = detail;
+  }
+}
+
+// Spotify puts the actual reason in the response body. Without it a 403 is
+// indistinguishable between a missing scope, a blocked playlist and an app that
+// is not allowed to reach the endpoint at all.
+const readErrorDetail = async (response: Response): Promise<string> => {
+  const body = await response.text();
+  if (!body) {
+    return '';
+  }
+  try {
+    const parsed = JSON.parse(body) as { error?: { message?: string } };
+    return parsed.error?.message ?? body;
+  } catch {
+    return body;
+  }
+};
+
+export const SPOTIFY_COLLECTIONS = [
+  'savedTracks',
+  'history',
+  'topTracks',
+] as const;
+
+export type SpotifyCollectionId = (typeof SPOTIFY_COLLECTIONS)[number];
+
 // --- Public API ---
 
 export const spotifyService = {
+  /** Whether a Client ID is available, from settings or the shipped default. */
+  hasClientId: (): boolean =>
+    Boolean(useAuthStore.getState().spotify.clientId || DEFAULT_CLIENT_ID),
+
   /**
    * Opens the Spotify authorization page in the system browser.
    * The app must handle the deep link callback nuclear://spotify-callback?code=...
@@ -194,7 +238,7 @@ export const spotifyService = {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) {
-      throw new Error(`Spotify API error ${res.status}: ${path}`);
+      throw new SpotifyApiError(res.status, path, await readErrorDetail(res));
     }
     return res.json();
   },
@@ -206,7 +250,7 @@ export const spotifyService = {
 
     while (url) {
       const page = (await spotifyService._fetch(url)) as SpotifyPlaylistPage;
-      results.push(...page.items);
+      results.push(...page.items.filter(Boolean));
       // Spotify returns full next URL; strip base
       url = page.next ? page.next.replace(SPOTIFY_API_BASE, '') : null;
     }
@@ -238,29 +282,27 @@ export const spotifyService = {
     spotifyPlaylist: SpotifyPlaylistSummary,
   ): Promise<Playlist> => {
     const tracks = await spotifyService.getPlaylistTracks(spotifyPlaylist.id);
-    const now = new Date().toISOString();
 
-    const items: PlaylistItem[] = tracks.map((track, i) => ({
-      id: `spotify-${spotifyPlaylist.id}-${i}`,
-      track,
-      addedAtIso: now,
-    }));
-
-    const playlist: Playlist = {
-      id: `spotify-imported-${spotifyPlaylist.id}`,
-      name: spotifyPlaylist.name,
+    return {
+      ...toPlaylist(spotifyPlaylist.id, spotifyPlaylist.name, tracks),
       description: spotifyPlaylist.description ?? undefined,
       artwork: spotifyPlaylist.images?.[0]
         ? { items: [{ url: spotifyPlaylist.images[0].url }] }
         : undefined,
-      createdAtIso: now,
-      lastModifiedIso: now,
-      isReadOnly: false,
-      origin: { provider: 'spotify', id: spotifyPlaylist.id },
-      items,
     };
+  },
 
-    return playlist;
+  /**
+   * Import one of the account's implicit collections — liked songs, listening
+   * history, top tracks — as a regular editable playlist. Spotify exposes these
+   * as endpoints rather than playlists, so they have no id of their own.
+   */
+  importCollection: async (
+    collection: SpotifyCollectionId,
+    name: string,
+  ): Promise<Playlist> => {
+    const tracks = await COLLECTION_FETCHERS[collection]();
+    return toPlaylist(collection, name, tracks);
   },
 
   /** Fetch the user's saved/liked tracks (first page, up to 50). */
@@ -298,9 +340,48 @@ export const spotifyService = {
     )) as SpotifyArtistsPage;
     return page.items.map(spotifyArtistToNuclear);
   },
+
+  /** Fetch the user's top tracks (up to 50). */
+  getTopTracks: async (): Promise<Track[]> => {
+    const page = (await spotifyService._fetch(
+      '/me/top/tracks?limit=50',
+    )) as SpotifyTopTracksPage;
+    return page.items.map(spotifyTrackToNuclear);
+  },
 };
 
+const COLLECTION_FETCHERS: Record<SpotifyCollectionId, () => Promise<Track[]>> =
+  {
+    savedTracks: () => spotifyService.getSavedTracks(),
+    history: () => spotifyService.getRecentlyPlayed(),
+    topTracks: () => spotifyService.getTopTracks(),
+  };
+
 // --- Type mappers ---
+
+const toPlaylist = (
+  sourceId: string,
+  name: string,
+  tracks: Track[],
+): Playlist => {
+  const now = new Date().toISOString();
+
+  const items: PlaylistItem[] = tracks.map((track, index) => ({
+    id: `spotify-${sourceId}-${index}`,
+    track,
+    addedAtIso: now,
+  }));
+
+  return {
+    id: `spotify-imported-${sourceId}`,
+    name,
+    createdAtIso: now,
+    lastModifiedIso: now,
+    isReadOnly: false,
+    origin: { provider: 'spotify', id: sourceId },
+    items,
+  };
+};
 
 const spotifyArtistToNuclear = (artist: SpotifyFullArtist): ArtistRef => ({
   name: artist.name,
@@ -355,12 +436,14 @@ type SpotifyTrack = {
   external_urls?: { spotify?: string };
 };
 
+// Spotify omits fields — sometimes the whole entry — for playlists a third-party
+// app may no longer read, such as its own algorithmic and editorial ones.
 export type SpotifyPlaylistSummary = {
   id: string;
   name: string;
   description?: string | null;
   images?: SpotifyImage[];
-  tracks: { total: number };
+  tracks?: { total: number };
 };
 
 type SpotifyPlaylistPage = {
@@ -381,6 +464,11 @@ type SpotifyFullArtist = {
 
 type SpotifyArtistsPage = {
   items: SpotifyFullArtist[];
+  next: string | null;
+};
+
+type SpotifyTopTracksPage = {
+  items: SpotifyTrack[];
   next: string | null;
 };
 
