@@ -295,5 +295,32 @@ describe('Stream Resolution Integration', () => {
         protocol: 'https',
       });
     });
+
+    it('resolves the next track ahead of time so skipping does not wait', async () => {
+      setupMetadataProvider();
+
+      const streamedCandidates: string[] = [];
+      const streamingProvider = new StreamingProviderBuilder()
+        .withSearchForTrack(async (artist, title) => [
+          createMockCandidate(`yt-${title}`, `${artist} - ${title}`),
+        ])
+        .withGetStreamUrl(async (candidateId) => {
+          streamedCandidates.push(candidateId);
+          return createMockStream(candidateId);
+        })
+        .build();
+
+      providersHost.register(streamingProvider);
+
+      await AlbumWrapper.mountDirectly();
+      await AlbumWrapper.addTrackToQueueByTitle('Countdown');
+      await AlbumWrapper.addTrackToQueueByTitle('Giant Steps');
+
+      await StreamResolutionWrapper.waitForPlayback();
+
+      await waitFor(() => {
+        expect(streamedCandidates).toContain('yt-Giant Steps');
+      });
+    });
   });
 });

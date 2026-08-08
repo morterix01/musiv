@@ -8,9 +8,11 @@ import type { QueueItem, StreamCandidate, Track } from '@nuclearplayer/model';
 
 import { streamingHost } from '../services/streamingHost';
 import { useQueueStore } from '../stores/queueStore';
+import { getSetting } from '../stores/settingsStore';
 import { useSoundStore } from '../stores/soundStore';
 
 let activeController: AbortController | null = null;
+let prefetchController: AbortController | null = null;
 let cachedStreamServerPort: number | null = null;
 
 const getStreamServerPort = async (): Promise<number> => {
@@ -144,6 +146,43 @@ const resolveStreamWithFallback = async (
   return tryNext(candidates);
 };
 
+/**
+ * Resolve the stream of the track that plays next, while the current one is
+ * still going.
+ *
+ * Without this, pressing next stops the audio and only then starts talking to
+ * the network, so the gap the user hears is a full resolution: candidate
+ * lookup, provider call, and up to `playback.streamResolutionRetries` attempts
+ * with exponential backoff for every candidate that fails. With the stream
+ * already resolved and unexpired, resolveStreamForCandidate returns without any
+ * request at all.
+ *
+ * Shuffle picks the next index at random, so there is nothing to guess.
+ */
+const prefetchNext = async (): Promise<void> => {
+  if (getSetting('core.playback.shuffle') === true) {
+    return;
+  }
+
+  const { items, currentIndex } = useQueueStore.getState();
+  const next = items[currentIndex + 1];
+  if (!next) {
+    return;
+  }
+
+  prefetchController?.abort();
+  prefetchController = new AbortController();
+  const { signal } = prefetchController;
+
+  const candidates = await resolveCandidates(next.track);
+  if (signal.aborted || !candidates) {
+    return;
+  }
+
+  updateItemCandidates(next, candidates);
+  await resolveStreamWithFallback(candidates, next, signal);
+};
+
 const resolveStream = async (
   item: QueueItem,
   t: TFunction,
@@ -158,6 +197,9 @@ const resolveStream = async (
 
   if (autoPlay) {
     stop();
+    // Until the new stream resolves the element still holds the previous one,
+    // and anything that resumes playback in that window plays the old track.
+    setSrc(null);
   }
   updateItemState(item.id, { status: 'loading', error: undefined });
 
@@ -194,6 +236,7 @@ const resolveStream = async (
 export const useStreamResolution = (): void => {
   const { t } = useTranslation('streaming');
   const currentItemIdRef = useRef<string | null>(null);
+  const nextItemIdRef = useRef<string | null>(null);
   const isFirstResolutionRef = useRef(true);
 
   useEffect(() => {
@@ -208,11 +251,23 @@ export const useStreamResolution = (): void => {
       void resolveStream(currentItem, t, autoPlay);
     };
 
-    const unsubscribe = useQueueStore.subscribe((state) => {
-      onCurrentItemChanged(state.getCurrentItem());
-    });
+    const onNextItemChanged = (nextItem: QueueItem | undefined): void => {
+      if (!nextItem || nextItem.id === nextItemIdRef.current) {
+        return;
+      }
 
-    onCurrentItemChanged(useQueueStore.getState().getCurrentItem());
+      nextItemIdRef.current = nextItem.id;
+      void prefetchNext();
+    };
+
+    const react = (state: ReturnType<typeof useQueueStore.getState>): void => {
+      onCurrentItemChanged(state.getCurrentItem());
+      onNextItemChanged(state.items[state.currentIndex + 1]);
+    };
+
+    const unsubscribe = useQueueStore.subscribe(react);
+
+    react(useQueueStore.getState());
 
     return unsubscribe;
   }, [t]);
