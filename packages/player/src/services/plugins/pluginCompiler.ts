@@ -85,11 +85,39 @@ async function ensureInit() {
       if (!es.mod) {
         es.mod = await import('esbuild-wasm');
       }
-      await es.mod.initialize({ wasmURL: wasmUrl, worker: false });
+      try {
+        await es.mod.initialize({ wasmURL: wasmUrl, worker: false });
+      } catch (error) {
+        // After stopEsbuild() the module may consider itself still initialized.
+        // That objection means the runtime is usable, so treat it as success;
+        // anything else is a real failure.
+        if (!/more than once|already/i.test(String(error))) {
+          es.initPromise = null;
+          throw error;
+        }
+      }
       es.initialized = true;
     })();
   }
   await es.initPromise;
+}
+
+/**
+ * Release the esbuild-wasm runtime.
+ *
+ * The wasm instance holds roughly 65 MB of linear memory that never shows up in
+ * the JS heap, and after the plugins are compiled at startup nothing needs it
+ * until the user installs or updates one. Measured on Windows: renderer working
+ * set 295 MB before, 230 MB after.
+ */
+export async function stopEsbuild(): Promise<void> {
+  if (!es.mod || !es.initialized) {
+    return;
+  }
+  await es.mod.stop?.();
+  es.initialized = false;
+  es.initPromise = null;
+  es.mod = null;
 }
 
 /**

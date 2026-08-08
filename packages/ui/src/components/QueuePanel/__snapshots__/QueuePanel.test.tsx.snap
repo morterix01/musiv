@@ -84,6 +84,8 @@ exports[`QueuePanel > (Snapshot) renders collapsed state 1`] = `
               <img
                 alt="Bohemian Rhapsody"
                 class="h-full w-full object-cover"
+                decoding="async"
+                loading="lazy"
                 src="https://picsum.photos/seed/1/300"
               />
             </div>
@@ -111,6 +113,8 @@ exports[`QueuePanel > (Snapshot) renders collapsed state 1`] = `
               <img
                 alt="Stairway to Heaven"
                 class="h-full w-full object-cover"
+                decoding="async"
+                loading="lazy"
                 src="https://picsum.photos/seed/2/300"
               />
             </div>
@@ -138,6 +142,8 @@ exports[`QueuePanel > (Snapshot) renders collapsed state 1`] = `
               <img
                 alt="Hotel California"
                 class="h-full w-full object-cover"
+                decoding="async"
+                loading="lazy"
                 src="https://picsum.photos/seed/3/300"
               />
               <div
@@ -205,6 +211,8 @@ exports[`QueuePanel > (Snapshot) renders default state 1`] = `
               <img
                 alt="Bohemian Rhapsody"
                 class="h-full w-full object-cover"
+                decoding="async"
+                loading="lazy"
                 src="https://picsum.photos/seed/1/300"
               />
             </div>
@@ -285,6 +293,8 @@ exports[`QueuePanel > (Snapshot) renders default state 1`] = `
               <img
                 alt="Stairway to Heaven"
                 class="h-full w-full object-cover"
+                decoding="async"
+                loading="lazy"
                 src="https://picsum.photos/seed/2/300"
               />
             </div>
@@ -365,6 +375,8 @@ exports[`QueuePanel > (Snapshot) renders default state 1`] = `
               <img
                 alt="Hotel California"
                 class="h-full w-full object-cover"
+                decoding="async"
+                loading="lazy"
                 src="https://picsum.photos/seed/3/300"
               />
             </div>

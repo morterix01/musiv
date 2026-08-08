@@ -6,6 +6,7 @@ import { resolveErrorMessage } from '../../utils/logging';
 import { providersHost } from '../providersHost';
 import { createPluginAPI } from './createPluginAPI';
 import { checkAndUpdatePlugins } from './pluginAutoUpdate';
+import { stopEsbuild } from './pluginCompiler';
 import { getPluginsDir } from './pluginDir';
 import { PluginLoader } from './PluginLoader';
 import {
@@ -78,6 +79,8 @@ export const hydratePluginsFromRegistry = async (): Promise<void> => {
   }
 
   providersHost.resolveActiveOnBootstrap();
+
+  await stopEsbuild();
 
   const startupFinishTime = Date.now();
   useStartupStore.getState().finishStartup(startupFinishTime - now);

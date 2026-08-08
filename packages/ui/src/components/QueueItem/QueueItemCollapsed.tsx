@@ -40,6 +40,8 @@ export const QueueItemCollapsed: FC<QueueItemProps> = ({
           <img
             src={thumbnail.url}
             alt={track.title}
+            loading="lazy"
+            decoding="async"
             className={cn('h-full w-full object-cover', classes?.thumbnail)}
           />
         ) : (

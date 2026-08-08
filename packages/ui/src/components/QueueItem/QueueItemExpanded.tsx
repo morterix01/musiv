@@ -52,6 +52,8 @@ export const QueueItemExpanded: FC<QueueItemProps> = ({
           <img
             src={thumbnail.url}
             alt={track.title}
+            loading="lazy"
+            decoding="async"
             className="h-full w-full object-cover"
           />
         ) : (

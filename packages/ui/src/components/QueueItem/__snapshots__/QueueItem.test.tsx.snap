@@ -15,6 +15,8 @@ exports[`QueueItem > (Snapshot) renders collapsed state 1`] = `
     <img
       alt="Bohemian Rhapsody"
       class="h-full w-full object-cover"
+      decoding="async"
+      loading="lazy"
       src="https://picsum.photos/seed/queen/300"
     />
   </div>
@@ -35,6 +37,8 @@ exports[`QueueItem > (Snapshot) renders collapsed state without onSelect 1`] = `
     <img
       alt="Bohemian Rhapsody"
       class="h-full w-full object-cover"
+      decoding="async"
+      loading="lazy"
       src="https://picsum.photos/seed/queen/300"
     />
   </div>
@@ -55,6 +59,8 @@ exports[`QueueItem > (Snapshot) renders current state 1`] = `
     <img
       alt="Bohemian Rhapsody"
       class="h-full w-full object-cover"
+      decoding="async"
+      loading="lazy"
       src="https://picsum.photos/seed/queen/300"
     />
   </div>
@@ -129,6 +135,8 @@ exports[`QueueItem > (Snapshot) renders default state 1`] = `
     <img
       alt="Bohemian Rhapsody"
       class="h-full w-full object-cover"
+      decoding="async"
+      loading="lazy"
       src="https://picsum.photos/seed/queen/300"
     />
   </div>
@@ -206,6 +214,8 @@ exports[`QueueItem > (Snapshot) renders error state 1`] = `
     <img
       alt="Bohemian Rhapsody"
       class="h-full w-full object-cover"
+      decoding="async"
+      loading="lazy"
       src="https://picsum.photos/seed/queen/300"
     />
   </div>
@@ -321,6 +331,8 @@ exports[`QueueItem > (Snapshot) renders loading state 1`] = `
     <img
       alt="Bohemian Rhapsody"
       class="h-full w-full object-cover"
+      decoding="async"
+      loading="lazy"
       src="https://picsum.photos/seed/queen/300"
     />
   </div>
@@ -397,6 +409,8 @@ exports[`QueueItem > renders without callbacks 1`] = `
     <img
       alt="Bohemian Rhapsody"
       class="h-full w-full object-cover"
+      decoding="async"
+      loading="lazy"
       src="https://picsum.photos/seed/queen/300"
     />
   </div>
