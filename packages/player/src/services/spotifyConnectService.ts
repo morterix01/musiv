@@ -1,5 +1,8 @@
+import { getSetting, useSettingsStore } from '../stores/settingsStore';
 import { useSpotifyConnectStore } from '../stores/spotifyConnectStore';
 import { spotifyService } from './spotifyService';
+
+const SPOTIFY_CONNECT_SETTING = 'core.integrations.spotifyConnect.enabled';
 
 type SpotifyWebPlaybackState = {
   paused: boolean;
@@ -96,9 +99,38 @@ const syncState = (state: SpotifyWebPlaybackState | null) => {
   });
 };
 
+const watchSetting = () => {
+  let previouslyEnabled = getSetting(SPOTIFY_CONNECT_SETTING) === true;
+
+  useSettingsStore.subscribe((state) => {
+    const enabled = state.getValue(SPOTIFY_CONNECT_SETTING) === true;
+    if (enabled === previouslyEnabled) {
+      return;
+    }
+    previouslyEnabled = enabled;
+
+    if (enabled) {
+      void spotifyConnectService.start();
+    } else {
+      spotifyConnectService.disconnect();
+    }
+  });
+};
+
 export const spotifyConnectService = {
   init: async (): Promise<void> => {
+    watchSetting();
+    await spotifyConnectService.start();
+  },
+
+  start: async (): Promise<void> => {
     if (player) {
+      return;
+    }
+    // The SDK pulls in its own renderer and the Widevine module: 152 MB
+    // measured on Windows, spent whether or not anyone casts to a Spotify
+    // device. Off unless the user asks for it.
+    if (getSetting(SPOTIFY_CONNECT_SETTING) !== true) {
       return;
     }
     try {

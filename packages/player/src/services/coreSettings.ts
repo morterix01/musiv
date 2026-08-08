@@ -262,6 +262,15 @@ export const CORE_SETTINGS: SettingDefinition[] = [
     default: false,
     widget: { type: 'toggle' },
   },
+  {
+    id: 'integrations.spotifyConnect.enabled',
+    title: 'preferences.integrations.spotifyConnect.enabled.title',
+    description: 'preferences.integrations.spotifyConnect.enabled.description',
+    category: 'integrations',
+    kind: 'boolean',
+    default: false,
+    widget: { type: 'toggle' },
+  },
 ];
 
 export const registerBuiltInCoreSettings = () => {

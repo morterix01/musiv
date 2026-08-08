@@ -456,6 +456,12 @@
           "title": "Discord Rich Presence",
           "description": "Show what you're listening to on your Discord profile."
         }
+      },
+      "spotifyConnect": {
+        "enabled": {
+          "title": "Spotify Connect",
+          "description": "Control playback on your Spotify devices from Nuclear. Loads Spotify's player SDK, which costs around 150 MB of memory, so leave it off unless you use it."
+        }
       }
     }
   },
